@@ -1,0 +1,11 @@
+VERSION=1.23
+DATE=2005-10-24 11:01:41
+
+
+- Under Admin Settings you can now set the default search mode that will be used if the user has not set a preference.
+
+- A link is now added to open Content Attachment in native application when viewing an article that is an attachment article.
+
+- Search results now hyperlink the Product column to list all articles for product
+
+- Autologin feature. Checkbox enables cookies on workstation to login automatically. Note: The cookies are cleared if you press logout.

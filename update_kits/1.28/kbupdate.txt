@@ -1,0 +1,13 @@
+VERSION=1.29
+DATE=2006-03-22 09:32:24
+
+VERSION 1.29 March 22nd 2006
+----------------------------
+
+- Reworked Full text query on strict searches to hit full text catalog once for 
+  each search word of phrase entered to obtain matches where words are spread  around multiple columns (ie keyword, title, body, attachments).
+  
+- Allow approvers or Admins to edit another users note
+
+- Fix to Custom action, was not logging article ID in activity log.
+

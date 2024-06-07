@@ -1,0 +1,30 @@
+VERSION=1.25
+DATE=2005-11-23 16:23:45
+
+VERSION 1.24 Nov 23rd 2005
+
+- Added "Must Read" flag to Article.
+
+- Added "Must Read" article list section to home page that displays Must read articles not read by current user since last modified.
+
+- Ability to Search for Must Read articles and display column of Read/Unread for each article
+
+- Article detail box for Admins displays Read percentage (bar) based on read vs eligable readers.
+
+- Note (Modify time of article must be less than than number of days of hits history to keep, otherwise Unread is assumed)
+
+- Added notification ability for Bulletins with Email button on bulletin form
+
+- Any Hyperlink strings or www. strings are hyperlinked on bulletin text
+
+- allow greater than 5 MB upload size. Requires c:\windows\php.ini changes to set: 
+	    upload_max_filesize = 20M
+		post_max_size = 20M
+		
+- Stopped email notification on if deleting article
+
+- Fixed content last modified dropping time portion on create article
+
+- Prevent collapsing of folders on browse (too slow if high number)
+
+- Folder click in browse, now browses to appropriate articles.

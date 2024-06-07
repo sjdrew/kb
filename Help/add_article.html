@@ -1,0 +1,97 @@
+<html>
+
+<head>
+
+<title>Online Help</title>
+
+<link rel="stylesheet" type="text/css" href="styles.css"></head>
+
+<body class="help-body" >
+
+
+
+<table border="0" cellspacing="0" cellpadding="6" width="100%">
+  <tr>
+    <td class="help-title-l" width="25%" valign="top" > <img border="0" src="../images/article.gif" width="50" height="53"></td>
+    <td width="50%" class="help-title-c" bgcolor="#C0C0C0" align="center"> Add Article </td>
+    <td class="help-title-r" bgcolor="#C0C0C0" align="right" width="25%"><a href="help-topics.html">Help
+        Topics</a><br>
+        <input type="button" value="Close" name="Close" onClick="window.close()" >
+    </td>
+  </tr>
+  <tr>
+    <td class="help-text" width="100%" valign="top" colspan="3">      <p><br>
+        <br>
+        <strong>To create a new KB article, click on the &quot;Create Article&quot; link on the KB home page.</strong></p>
+      <p><em>Then complete the following information:</em></p>
+      <ul>
+        <li><strong>Title: </strong>Enter a descriptive title of the article.</li>
+        <li><strong>Group:</strong> Select the group that owns this article.<br>
+          <br>
+          <br>
+        </li>
+        <li><strong>Viewable By: </strong>Select from:
+          <ul>
+            <li>Group Members - Only members of the owning group can view this article</li>
+            <li>Public - Any KB user can view the article</li>
+            <li> Editors - Only a KB user with a privilege level of Editor or above can view article</li>
+            <li>Administrator - Only KB Administrators can view article.</li>
+          </ul>
+        </li>
+        <li><strong>Type: </strong>Select the appropriate type from the list</li>
+        <li><strong>Product: </strong> Enter a product name or select from the list (if Remedy Integration)</li>
+        <li><strong>Must Read: </strong>If set to yes then all users that are a member of this group and have the Must Read flag set for this group are presented with this article on the home page under a special section called Must Read articles. Use this for Articles that you want to enforce all users to read. </li>
+        <li><strong>Custom Field: </strong>A custom drop list field may be displayed here if enabled by the Administrator and labeled accordingly</li>
+        <li><strong>Custom Date Field: </strong>Another custom field which maybe enabled by the Administrator.</li>
+        <li><strong>Optional Keywords: </strong>You can increase the ranking of this article by adding keywords in this box.</li>
+        <li><strong>Related Articles: </strong>Add any articles which are related to this article. (You can perform this function only after saving this article).<br>
+            <br>
+          <br>
+        </li>
+        <li><strong>Status:</strong> The default status for new articles is Compose. Only Approvers or the Author of the article can view articles that do not have a status of Active.</li>
+        <li><strong>Contacts: </strong>Enter Contact name if desired, as appropriate for the content of this KB article. These fields are optional. However persons listed as the contact will see this article listed under &quot;My Articles&quot; on the home page and can also receive notifications of updates.</li>
+        <li><strong>Review By:</strong> By default when you save the article, this field will be set for 1 year from the create date or as set by the Administrator.</li>
+        <li><strong>Review Priority: </strong>Choose either Low or High. High priority articles needing review will display as a seperate link on the KB home page, this helps bring to attention those articles that should be made available quickly.</li>
+        <li><strong>Expires: </strong>Optional date that sets the expiration date of the article. Once expired the article will not be visible from the search page.</li>
+      </ul>      
+      <p><strong>Submit For Review</strong> button - When an article is in Compose status the submit for Review button is enabled to allow authors to indicate that the article is ready for review. Pressing this button moves the Status to Pending Review which will cause an email notification to Approvers who have this notification type enabled. Once in Technical or Content review status, the article will be displayed on the home page quick links for those that have Approval privilage for the group. </p>
+      <p><strong>Mark Reviewed</strong> button - When an article is in any status other than Compose. Pressing the Mark Reviewed button (Approvers only) will move the article Status to the next value or Active. It also sets the Last Reviewed time stamp and is audited under the Audit tab. Once an Article is Active it is considered &quot;Published&quot; and available to users. </p>
+      <p><strong>Article Content</strong></p>
+      <p>The article content can be created using the<strong> Article Editor</strong>, which is a basic HTML editor or Article content can be<strong> imported from a .MHT</strong> file or the Article Content can be directed at an<strong> uploaded attachment.</strong></p>
+      <blockquote>
+        <p><strong>Article Editor </strong></p>
+        <ul>
+          <li>The Article content editor provides a rich editor window for entering or pasting the content of the article.</li>
+          <li>Hover your mouse over each button icon to see the function of the button.</li>
+          <li>See the topic <a href="content_editor.html">Modifying Article Content</a>, for more information about using the Content editor. </li>
+        </ul>
+        <p><strong>Import Content</strong></p>
+        <ul>
+          <li>The Import Content button allows you to upload a .MHT file which will be converted to HTML and stored as the Article content. </li>
+          <li>MHT files can be produced from Microsoft Word by saving a document in .MHT/MHTML format and can contain images which are embeded in the file. This provides an easier method than taking an existing word document, extracting the images and uploading each image separately.</li>
+          <li>Some formatting problems can occur on complex documents. </li>
+          <li>Note: Do not use this feature for large documents (&gt; 100K) as editing dynamic content for large documents within the browser will cause  performance problems with the desktop browser. Instead large documents should be included as an attachment or attachment as content.</li>
+        </ul>
+        <p><strong>Attachment as Content</strong></p>
+        <ul>
+          <li>You may upload a Word, MS Excel, PDF file etc as an attachment that will be used as the article content without conversion. </li>
+          <li>In this case the content body of the article is emtpy, and this attachment is viewed automatically embeded in a frame using its native application (Word, Excel, PDF Reader). </li>
+          <li>When you upload an Attachment as Content, the Article Editor will disappear and this attachment will override the content.</li>
+          <li>To update this content, you will need to press the Replace button and upload a newer version of the document. The previous version will be archived.</li>
+        </ul>
+      </blockquote>      
+      <p><strong>Article Archives </strong></p>
+      <p>When ever a change is made to the content or attachments of an article, the complete article and its attachments are archived. Users with Approval or higher privilage can view the archive versions by using the links when viewing the article. When in the article administraion window you can also restore previous archives as the active version (thus undoing any changes made).</p>
+      <p>The default number of versions to keep is 5, but this can be controlled by an Administrator.</p></td>
+  </tr>
+  <tr>
+    <td class="help-footer" height="1" valign="middle" colspan="3">
+      <hr noshade color="#C0C0C0" size="1">
+      See Also: <a href="help-topics.html">Help Topics</a>, <a href="content_editor.html">Modifying Article Content</a></td>
+  </tr>
+</table>
+</body>
+
+
+
+</html>

@@ -1,0 +1,55 @@
+VERSION=1.24
+DATE=2005-11-09 15:55:38
+
+ - Fixed Email password link
+ 
+ - Fixed problem when spaces in KB number
+ 
+ - Product link in "Article Details" box is now hyperlinked to display all articles for Product.
+ 
+ - Added ALL to possible pagination setting under Preferences
+
+ - When performing a search in ADMIN Manage Articles and performing a change on one or more articles, 
+   clicking the back button on the bottom right now returns to refreshed search list based on the admin's original search.
+
+ - Admin search now has the ability to use KB numbers, is KB2232
+
+ - Pagination markers at bottom of search page enlarged font size. Also Left/Right keyboard keys are short cuts.
+
+ - Delete button: To avoid deletion by accident, when clicking on delete the first time, actually moves status to
+   Obsolete, then a 2nd delete operation will actually phsically remove the article.
+
+ - You can now customize the following:
+ 		- The header that is display on every page
+		- The left column on the home page (under the quick links)
+		- Optional content before the search panel
+		- Footer displayed on the bottom of articles
+		
+	This is done via a new icon displayed on the Admin page.
+	
+	The left column on the home page is a good location to provide your users with quick links or favorites to other
+	frequently used addresses.
+	
+	This is an admin feature as it affects the way the application looks to all users.
+	 
+ - Added a new Setting to control whether Users with write access are able to modify articles. Write users can always
+   create articles and modify articles if they are still in Pending Review status.
+ 
+  - Fixed problem with Copy to New, that was setting the status incorrectly.
+   
+  - Fixed an error message that could occur with an empty search condition.
+   
+  - Added a new field to article Administration called "Review Priority". Default is Low. 
+  
+  - On home page added a seperate link for High Review Priority articles. 
+  
+  - Added ability to search by priority on Admin search page.
+   
+  - Fixed issue with Email notifications not being triggered for articles that used an attachment as content.
+  
+  - Added setting to allow or deny users with Write access the ability to create bulletins.
+   
+  - Fixed "Hits" link on Article page to always open in top frame.
+  
+  - Added Hits link on Article Admin page to jump to Hits report for the current article.
+

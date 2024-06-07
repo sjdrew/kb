@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Templates imagesBasePath="fck_template/images/">
+
+
+	<Template title="Work Around" image="template1.gif">
+		<Description>A solution or troubleshooting document where the emphasis is on restoring a failed service or component.  Provides instructions on restoring that service quickly and by approved methods.</Description>
+		<Html>
+			<![CDATA[
+<h3><font color="#000080">Symptom&nbsp;</font></h3></p>
+<hr />
+<div>Describe what issues the user may experience.</div>
+<ul type="disc">
+    <li>If this is not well written the person looking for the solution you provide below will not know the solution is below </li>
+    <li>Description of the error message or symptoms encountered by the client </li>
+    <li>If possible, add a screen capture of the error message </li>
+</ul>
+<h3><font color="#000080">Resolution&nbsp;</font></h3></p>
+<hr />
+<div>Steps required to either resolve or route the issue. </div>
+<ul type="disc">
+    <li>Please provide some (specific) information regarding: </li>
+<p style="MARGIN-LEFT: 0.75in; TEXT-INDENT: -0.25in; mso-list: l11 level2 lfo4; tab-stops: list .75in"><font face="Arial" size="2">o basic troubleshooting of the application, </font></p>
+<p style="MARGIN-LEFT: 0.75in; TEXT-INDENT: -0.25in; mso-list: l11 level2 lfo4; tab-stops: list .75in"><font face="Arial" size="2">o questions the Service Desk can ask to help identify and resolve problems, </font></p>
+<p style="MARGIN-LEFT: 0.75in; TEXT-INDENT: -0.25in; mso-list: l11 level2 lfo4; tab-stops: list .75in"><font face="Arial" size="2">o Information required by other support groups before the Service Desk routes the ticket for action. </font></p>
+    <li>If multiple groups may be required to resolve the issue, split this section into the steps required per group. </li>
+    <li>Try to keep the "Resolution" section lean. Details around why it should be fixed this way or how the technology works should not clutter up the "Resolution" section and should be referenced in the "Notes" section.</li>
+</ul>
+<h3><font color="#000080">Cause&nbsp;</font></h3></p>
+<hr />
+<div>If known, please provide a cause for this issue & include Problem Case number if any. </div>
+<h3><font color="#000080">Notes</font></h3></p>
+<hr />
+<p>Any details not covered above.</p>
+			]]>
+		</Html>
+	</Template>
+	
+
+	<Template title="How To" image="template1.gif">
+		<Description>Reference detailing the steps required to be taken to setup a new service or component."How To" should not be for troubleshooting or attempting to repair a failed service.</Description>
+		<Html>
+			<![CDATA[
+<h3><font color="#000080">Overview&nbsp;</font></h3></p>
+<hr />
+<div>Brief description of what this document is meant to cover (objective of document).</div>
+<div>If applicable, what triggers use of this document.</div>
+<div>Examples:</div>
+<ul type="disc">
+    <li>Monthly task</li>
+    <li>How to reimage a PC</li>
+    <li>Request from user to have this done</li>
+</ul>
+<h3><font color="#000080">Steps</font></h3></p>
+<hr />
+<div>The steps required to accomplish the objective.</div>
+<ul type="disc">
+    <li>Try to keep the "Steps" section lean. Details around why it should be fixed this way or how the technology works should not clutter up the "Steps" section and should be referenced in the "Notes" section.</li>
+</ul>
+<h3><font color="#000080">Notes</font></h3></p>
+<hr />
+<div>Any details not covered above.</div>
+			]]>
+		</Html>
+	</Template>	
+	
+	
+	
+	<Template title="Information" image="template1.gif">
+		<Description>Document containing general information and reference information about any number of things, such as organizational information, configuration information, inventories, etc.</Description>
+		<Html>
+			<![CDATA[
+<h3><font color="#000080">Information&nbsp;</font></h3></p>
+<hr />
+<div>Document containing general information and reference information about any number of things, such as organizational information, configuration information, inventories, etc.</div>
+			]]>
+		</Html>
+	</Template>
+	
+	
+</Templates>

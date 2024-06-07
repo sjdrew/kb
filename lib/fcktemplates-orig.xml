@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Templates imagesBasePath="fck_template/images/">
+
+
+	<Template title="Application General" image="template1.gif">
+		<Description>Application Template - information and general routing regarding an application</Description>
+		<Html>
+			<![CDATA[
+<p><span class="Subtitle">[Application Name]</span></p>
+<p>&nbsp;</p>
+<p><span class="Subtitle">Background</span> </p>
+<p>&nbsp;</p>
+<div>Please provide some background information regarding the application. Useful information would include: </div>
+<ul type="disc">
+    <li>application type (local install, Web Based(include URL), Servers/databases the application uses) </li>
+    <li>Client base (Approx # of users, business units/ departments where clients are based) </li>
+    <li>Access requirements (ID, password) </li>
+    <li>Support requirements (24 hour(if 7x24 ensure that afterhours spreadsheet has been updated), working hours only, etc..) </li>
+    <li>Which group or queue ticket should be routed to eg (if issue with x put in y queue)&nbsp;&nbsp; </li>
+</ul>
+<div><span class="Subtitle">General Troubleshooting</span></div>
+<div>&nbsp;</div>
+<div><strong></strong></div>
+<div><span class="Subtitle"></span></div>
+Please provide some (specific) information regarding basic troubleshooting of the application, questions EHD can ask to help identify and resolve problems, or information required by other support groups before the EHD routes the ticket for action.
+<div>&nbsp;</div>
+<div>&nbsp;</div>
+<div><span class="Subtitle">Miscellaneous / Service Request Routing</span></div>
+<div>&nbsp;</div>
+<div><span class="Subtitle"></span></div>
+<div><span class="Subtitle"></span></div>
+<div><span class="Subtitle"></span></div>
+<div><span class="Subtitle"></span>Provide some detail about other requests that Help Desk may receive regarding this application and how they should be routed/handled</div>
+			]]>
+		</Html>
+	</Template>
+	
+
+	<Template title="Error Message Article" image="template1.gif">
+		<Description>Error Message Template Article</Description>
+		<Html>
+			<![CDATA[
+<span class="Subtitle">
+<p>[Application Name - Error Message/Code]</p>
+</span>
+<p>&nbsp;</p>
+<p>This article represents a specific error message that the client may encounter and call about.</p>
+<ul>
+    <li>Provide a short description of the cause</li>
+    <li>Describe how the call should be handled, routed or resolved.</li>
+    <li>Who&nbsp;should be contacted for more technical information?</li>
+    <li>Are there other KB articles can provide more informationon this application?</li>
+</ul>
+<p>&nbsp;</p>
+			]]>
+		</Html>
+	</Template>	
+	
+	
+	
+	<Template title="Two Column Template" image="template2.gif">
+		<Description>A template that defines two colums, each one with a title, and some text.</Description>
+		<Html>
+			<![CDATA[
+				<table cellspacing="0" cellpadding="0" width="100%" border="0">
+					<tbody>
+						<tr>
+							<td width="50%">
+							<h3>Title 1</h3>
+							</td>
+							<td>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </td>
+							<td width="50%">
+							<h3>Title 2</h3>
+							</td>
+						</tr>
+						<tr>
+							<td>Text 1</td>
+							<td>&nbsp;</td>
+							<td>Text 2</td>
+						</tr>
+					</tbody>
+				</table>
+				More text goes here.
+			]]>
+		</Html>
+	</Template>
+	
+	
+</Templates>

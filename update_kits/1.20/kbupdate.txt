@@ -1,0 +1,11 @@
+VERSION=1.21
+DATE=2005-09-27 15:55:35
+
+
+- New Article Administration layout, nicer design with tabs
+ 
+ - New Article editor
+ 
+ - Contact1/2 fields now use smart popup lists
+
+ - New searching via modified or last reviewed dates in admin pages.

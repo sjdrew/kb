@@ -1,0 +1,8 @@
+VERSION=1.22
+DATE=2005-10-11 23:09:24
+
+- Now only returns article once in search when matched on content or attachment.
+
+- Added Group column to home page article lists
+
+- Fix for hyperlinking from Word document that is being displayed As Content of article and references another article using url; ensures it displays in top window vs inside frame.

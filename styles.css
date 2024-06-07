@@ -1,0 +1,603 @@
+/*
+ * Styles
+ */
+body, td, th, textarea {
+    font-family:  Arial, Helvetica, sans-serif, Geneva, "Bitstream Vera Sans","Trebuchet MS" ;
+    font-size: 12px; 
+    }
+
+body, p, form, div, table, hr {
+    margin: 0;
+    padding: 0;
+} 
+
+p { margin-bottom: 4px; margin-top: 4px;}
+li { margin-bottom: 4px; margin-top: 4px; }
+
+table { border-collapse:collapse }
+
+BODY {
+	background: #FFFFFF;
+	margin-bottom:0px; 
+	margin-left:0px; 
+	margin-right:0px; 
+	margin-top:0px;
+	padding: 0px;
+	SCROLLBAR-BASE-COLOR: #2F3D50;
+	SCROLLBAR-ARROW-COLOR: #FFFFFF;
+}
+	
+fieldset {
+    border: 1px solid #342F64;
+}
+
+legend {
+    font-weight: bold;
+	color: #342F64;
+}
+	
+th {
+	font-weight: bold;
+	color: #000099;
+}
+
+a {
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
+}
+.help-text  { background-color: #FFFFCC}
+.help-footer { font-size: 8pt; background-color: #FFFFCC }
+			  
+/*A:active  { COLOR: #006699; TEXT-DECORATION: none } */
+A:visited { COLOR: #334A9B; TEXT-DECORATION: none }
+A:hover   { COLOR: #334A9B; TEXT-DECORATION: underline }
+A:link    { COLOR: #334A9B; TEXT-DECORATION: none }
+
+A:link.barurl { color: #000000; font-size:9px; TEXT-DECORATION: none; font-family: arial };
+A:visited.barurl { color: #000000; font-size:9px; TEXT-DECORATION: none; font-family: arial}
+A:hover.barurl   { COLOR: #334A9B; font-size:9px; TEXT-DECORATION: underline;font-family: arial }
+
+h1 {
+    font-size: 175%;
+    }
+h2 {
+    margin-top: 5px;
+    margin-bottom: 10px;
+    font-size: 150%;
+    /* border-bottom: 1px solid; */
+    }
+h3 {
+    padding-top: 8px;
+    font-size: 125%;
+    }
+h4 {
+    padding-top: 8px;
+    font-size: 117%;
+    }
+h5 {
+    padding-top: 8px;
+    font-size: 110%;
+}
+
+button, radio, input, select {
+	font-size: 11.4px;
+}
+
+.submit {
+    border-color: #696969;
+    background: #dcdcdc;
+}
+	
+
+.window-cel      { font-size: 8pt; background-color: #ffffff }
+.window-text     { font-size: 9pt }
+.window-frame    { font-size: 11pt; background-color: #ffffff}
+.window-frame-sm { color: white; font-size: 8pt; background-color: #ffffff}
+.cmdbar          { color: white; align: right; font-size: 8pt; text-align: right; }
+.cmdbar td 		{ background-color:#3E4462; }
+.cmdbartext      { color: white; font-size: 8pt; }
+a:visited.cmdbartext { color: white; }
+a:hover.cmdbartext { color: white; }
+a:link.cmdbartext { color: white; }
+
+/* used by Grapical report controls */
+.hdr-control { font-size: 9pt; background-color: #99B7DD; font-weight: bold; color: white;}
+
+/* Generic Forms hdr and data */
+
+.form-hdr  {
+	color: #000099;
+	font-weight: normal;
+	text-align: right;
+	padding: 2px;
+	padding-right: 5px;
+	line-height: 18px;
+}
+
+.form-hdr2  {
+	color: #000099;
+	font-weight: normal;
+	text-align: left;
+	padding: 2px;
+	padding-right: 5px;
+	line-height: 16px;
+}
+
+
+.form-data {    	padding: 2px; font-weight: normal }
+.form-sm   {    font-size: 9px; font-weight: normal }
+.form-notes-type {   font-size: 11px; color: #333333; font-weight: normal }
+.form-notes {   font-size: 12px; font-weight: normal; color:#000066; }
+.form-tbl-bdr {	border: 1px solid #000099; 	bordercolor: #000099; }
+
+.form-subhdr {
+	font-size: 12px;
+	font-weight: bold;
+	background-color: #D4D4D4;
+	text-align: center;
+}
+
+/* Normal Listings */
+.list { padding: 1px; background-color: #F0F0F0}
+.list2 { padding: 1px; background-color: #FAFAFA}
+.list-hdr { padding: 2px; background-color: #3E4462; font-weight: bold; color: #FFFFFF; }
+.list-totals { background-color: #F0F0F0; font-weight: bold; color: #000000; }
+
+/* sort links in normal listings */
+a:visited.list-hdr-sort { color: #ffffff; font-weight:bold; text-decoration:none }
+a:hover.list-hdr-sort { color: #ffffff; font-weight:bold; text-decoration:underline }
+a:link.list-hdr-sort {  color: #ffffff; font-weight:bold; text-decoration:none  }
+
+/* Smaller Listings */
+td.list-sm   { font-size: 8pt; 	background-color: #ffffff; }
+td.list-sm a:visited, td.list-sm a:link { color: #661111; font-weight: bold; }
+td.list-sm2   { font-size: 8pt; 	background-color: #ffffff; }
+td.list-sm2 a:visited, td.list-sm2 a:link { color: #661111; font-weight: bold; }
+
+/* For home page lists, when article has been read */
+span.aread a:visited, span.aread a:link { font-weight: normal; }
+
+.list-sm-hdr { font-size: 8pt; background-color: #F2F2F2; font-weight: bold;  }
+
+/* links within sortable small listings */
+a:visited.list-sm-hdr-sort { color: black; font-weight:bold; text-decoration:none }
+a:hover.list-sm-hdr-sort { color: #FF2222; font-weight:bold; text-decoration:underline }
+a:link.list-sm-hdr-sort { color: black; font-weight:bold; text-decoration:none  }
+
+
+/* KB listings */
+td.list-kb, td.list-kb2   {
+	font-size: 8pt;
+	background-color: #ffffff;
+	border-bottom-style: solid;
+	border-bottom-width: 1px;
+	border-bottom-color: #BBBBBB;
+	padding-top: 6px;
+}
+td.list-kb a:visited, td.list-kb a:link, td.list-kb2 a:visited, td.list-kb2 a:link { color: #661111; font-weight: bold; }
+.list-kb-hdr { font-size: 8pt; background-color: #F2F2F2; font-weight: bold }
+a:visited.list-kb-hdr-sort { color: black; font-weight:bold; text-decoration:none }
+a:hover.list-kb-hdr-sort { color: #FF2222; font-weight:bold; text-decoration:underline }
+a:link.list-kb-hdr-sort { color: black; font-weight:bold; text-decoration:none  }
+
+.listp  {
+	margin-top: 4px;
+	margin-bottom: 4px;
+	padding: 0;
+	font-size: 8pt;
+	background-color: #ffffff;
+	font-weight: bold;
+	vertical-align: middle;
+}
+
+p.listp a {
+	padding: 0px;
+}
+
+
+
+/* Help and message boxes */
+.hlp-body {
+	font-size: 8pt;
+	background-color: #444488;
+	color: #FFFFFF;
+}
+
+.small {
+	font-size: 9px;
+}
+.medium {
+	font-size: 11.4px;
+}
+.smallbold {
+	font-size: 9px;
+	font-weight: bold;
+}
+A.nav:link { COLOR: #202E3E;
+                    TEXT-DECORATION: none;}
+A.nav:visited { COLOR: #202E3E;
+                    TEXT-DECORATION: none;}
+A.nav:active { COLOR: #202E3E;
+                     TEXT-DECORATION: none;}
+A.nav:hover { COLOR: #FF9400;
+                      TEXT-DECORATION: none;}
+.search {
+	FONT-SIZE: 10px;
+	COLOR: #F6F6F6;
+    border-top:1px solid;
+    border-bottom:1px solid;
+    border-left: 1px solid;
+    border-right:1px solid;
+    BORDER-COLOR: #FFFFFF;
+    width: 125px;
+    height: 17px;
+	BACKGROUND-COLOR: #3E4462
+}
+
+.subhdr {
+	color:#000066;
+	font-weight: bold;
+	font-size: 14px;
+	padding-left: 8px;
+}
+
+.RTitle {
+	font-weight: bold;
+	font-size: 12px;
+	padding-bottom: 8px;
+	margin: 0px;
+}
+
+.RPreview {
+	color:#000000;
+	font-weight: normal;
+	font-size: 12px;
+	font-style: italic;
+	margin: 0px;
+	padding-right: 6px;
+	padding-bottom: 10px;
+}
+
+
+.hdr1 {
+	font-weight: bold;
+	color: #000066;
+	font-size: 14px;
+}
+
+.dots {
+	color: #B3B3B3;
+}
+
+.MsgBox {
+	font-size: 11.4px;
+	font-weight: bold;
+	color: #990000;
+	border: thin dashed #333366;
+	padding: 4px;
+	width: 60%;
+	text-align:left;
+}
+
+.shadowboxfloat {margin: 4px 0px 0px 5px;
+			background: url(images/shadowlight.gif) repeat;
+			width: 55%; 
+			position: relative; /*IE needs this to show float properly*/
+			float: center}
+
+.shadowcontent {position: relative;
+			padding: 10px; 
+			top: -5px; /* these two define the shadow 'offset'*/
+			left: -5px; /*...*/
+			background: #eaeaea;
+			color: black;
+			border: 1px solid #2E595C}		
+
+.ArticleTitle {
+	color:#000066;
+	font-weight: bold;
+	font-size: 16px;
+	margin:0px;
+	margin-top: 0px;
+	margin-bottom: 2px;
+	font-family: Arial;
+}
+
+table.ArticleInfo {
+    border: 1px solid;
+	border-color: #d0d0d0;
+	font-family: Arial;
+	width: 180px;
+}
+table.ArticleInfo th { 
+    border-bottom: 1px solid #ccc; 
+	background-image: url('images/searchbg.gif'); 
+	color:#333333;
+	background-color: #d0d0d0;
+	font-size: 10px;
+	padding: 2px;
+}
+
+
+#ArticleAttachments
+{
+   float: right;
+}
+
+#ArticleDetails {
+	clear: both;
+	float: right;
+}
+
+.ArticleDiv {
+   width:100%; 
+   padding-left: 12px; 
+   padding-right: 12px;
+   padding-top:2px;
+   height: 450px;
+}
+
+div.ArticleBody {
+	font-size: 12px;
+	margin-top: 15px;
+}
+
+div.NotUsedArticleBody li {
+	margin-top: 4px;
+	margin-bottom: 4px;
+}
+
+div.NotUsedArticleBody img {
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+
+.CategoryTable { border: 1px solid #CCC; width:400px; margin: 0px; margin-top:5px; font-family: Verdana, Arial; }
+.CategoryTable th { color: #222; text-align: left; padding: 2px; font-weight: normal; font-size:11px;}
+.CategoryTable td  { border: 1px solid #CCC; color: #333; padding: 2px; font-weight: bold; font-size:11px;  }
+.CategoryTable .CatHdr  { border-bottom: 1px solid #ccc; background-image: url('images/searchbg.gif') ; color: #222; font-weight: normal; height:20px; font-size: 12px }
+
+table.ArticleInfo td, table.ArticleInfo p {
+	font-family: Arial;
+	color:#333333;
+	font-size: 10px;
+	padding-top: 1px;
+	padding-bottom: 1px;
+	padding-left: 2px;
+	padding-right: 2px;
+}
+
+/* if width is a percent, say 25, then will always be 4 icons per width, if pixel value then you get 
+   however many will fit in current screen width. */
+.divIcon  {
+	position: relative;
+	float: left;
+	width: 140px;
+	height: 90px;
+	padding: 0px;
+}
+
+.divIcon p {
+	position: absolute;
+	bottom: 5;
+	left: 0px;
+	width: 100%;
+}
+
+.divIcon img { 
+	margin: 5px;
+}
+
+/* To help in formatting converted word documents */
+p.MsoNormal, li.MsoNormal 
+{	
+	margin-bottom:.0001pt; 
+	font-family:"Arial"; 
+	margin-left:0in; 
+	margin-right:0in;
+	margin-top:0in 
+}
+p.MsoBodyTextIndent, li.MsoBodyTextIndent, div.MsoBodyTextIndent
+{
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:.5in;
+	margin-bottom: 0;
+}
+p.MsoBodyTextIndent2, li.MsoBodyTextIndent2, div.MsoBodyTextIndent2
+{
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:.5in;
+	margin-bottom: 0;
+}
+p.Text, p.MsoHeader
+{
+	margin: 0;
+	padding: 0;
+}
+
+/************************ tabs */
+.tabtable {
+	border-bottom-width: thin;
+	border-bottom-style: solid;
+	border-bottom-color: #342F64; 
+	border-left-width: thin;
+	border-left-style: solid;
+	border-left-color: #342F64; 
+	border-right-width: thin;
+	border-right-style: solid;
+	border-right-color: #342F64; 
+	background: #eaeaea;
+}
+.article-tabon {
+	font-size: 9pt;
+	font-weight: bolder;
+	background-color: #342F64; 
+	border-bottom-width: thin;
+	border-bottom-style: solid;
+	border-bottom-color: #342F64;
+	cursor: hand;
+	text-align:center;
+}
+.article-taboff {
+	font-size: 9pt;
+	font-weight: normal;
+	color: #CCCCCC;
+	background-color: #EFEFEF;
+	border-bottom-width: thin;
+	border-bottom-style: solid;
+	border-bottom-color: #342F64; 
+	cursor: hand;
+	border-left-width: 1px;
+	border-left-style: solid;
+	border-left-color: #BBBBBB;
+/*
+	border-top-width: 1px;
+	border-top-style: solid;
+	border-top-color: #BBBBBB;
+*/
+	border-right-width: 1px;
+	border-right-style: solid;
+	border-right-color: #BBBBBB;
+
+	text-align:center;
+}
+.article-tabfill {
+	font-size: 9pt;
+	font-weight: normal;
+	border-bottom-width: thin;
+	border-bottom-style: solid;
+	border-bottom-color: #342F64; 
+}
+.article-taboff a:visited, .article-taboff a:link {
+	font-size: 9pt;
+	font-weight: normal;
+	text-decoration: none;
+	color: #666666;
+}
+.article-taboff a:hover {
+	font-size: 9pt;
+	font-weight: normal;
+	text-decoration: none;
+	color: #111111;
+}
+.article-tabon a:link, .article-tabon  a:visited, .article-tabon  a:hover {
+	font-size: 10pt;
+	font-weight: bolder;
+	text-decoration: none;
+	color: #FFFFFF;
+}
+.article-tabfill {
+	border-bottom-width: thin;
+	border-bottom-style: solid;
+	border-bottom-color: #342F64; 
+	padding: 0;
+	margin: 0;
+}
+
+/************** These items are shared by KB editor, but there presence also must be defined in
+	            fckstyles.xml *******************/
+				
+.Subtitle {
+	font-weight: bold;
+	font-size: 14px;
+	/*color:#003366;*/
+	margin:0px;
+	margin-top: 2px;
+	margin-bottom: 2px;
+}
+
+.Highlight {
+	background-color:#CCFF00;
+}
+
+.TableTitle {
+	background-color:#000066;
+	color: #FFFFFF;
+}
+
+.Code
+{
+	border: #8b4513 1px solid;
+	padding-right: 5px;
+	padding-left: 5px;
+	color: #000066;
+	font-family: 'Courier New' , Monospace;
+	background-color: #ff9933;
+}
+
+.9ptFont
+{
+	font-size: 9pt;
+}
+.10ptFont
+{
+	font-size: 10pt;
+}
+.11ptFont
+{
+	font-size: 11pt;
+}
+.12ptFont
+{
+	font-size: 12pt;
+}
+
+/* ... */
+
+
+.DialogTitle
+{
+	font-weight: bold;
+	font-size: 14pt;
+	height: 30px;
+	color: #FFFFFF;
+	background-color:  #003366;
+	padding: 3px 10px 3px 10px;
+	border-bottom: #2222AA 1px solid;
+}
+
+.DialogBody
+{
+	background-color: #E8E8E8;
+}
+
+.DialogFooter
+{
+	font-weight: bold;
+	font-size: 14pt;
+	height: 30px;
+	color: #000066;
+	background-color: #003366;
+	padding: 3px 10px 3px 10px;
+	border-top: #2222AA 1px solid;
+}
+
+
+.boxcontent .boxtitle { width:100%; padding-bottom:4px; font-weight:bold; font-size:14px; }
+.boxcontent .boxfooter { padding-top: 1px; height:13px; font-size:10px; width:98%; text-align:right; }
+.window-frame .boxtable {  width:100%; clear:both; border: 1px solid #003366; border-collapse: collapse   }
+
+.window-cel  { font-size: 8pt; background-color: #FCFCF0 }
+.window-text { }
+
+.cmdbar  { padding:2px; border: 1px solid #cccccc; height:20px; background-color:#003366; font-size:12px; color: white; text-align: right; }
+
+/* Page links */
+.page, a:visited.page, a:link.page { padding-top:2px; font-size: 13px; color: #003366; font-weight:normal; text-decoration:none  }
+a:hover.page { font-weight:bold; text-decoration:underline }
+
+/* Overrides so Printing looks better */
+@media print {
+	.window-frame table { border-collapse:collapse; border: none; }
+	.window-frame .boxtable.td { border: 1px solid #DDDDDD }
+	.list-sm, .list-sm2, .list2, .list-src2, .list, .list-src, .hlp-box{ border: 1px solid #DDDDDD}
+}
+
+

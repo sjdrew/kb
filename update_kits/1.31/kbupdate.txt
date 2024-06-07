@@ -1,0 +1,11 @@
+VERSION=1.32
+DATE=2006-09-22 10:41:48
+
+
+- Mark reviewed button fix when status is active (was not setting last reviewed date)
+
+- Added Microsoft Support KB to list of places to search. (Searches support.microsoft.com in frame).
+
+- Minors fixes to email generation and reporting bad email addresses.
+
+- Minor fix to search query to ensure when article matches "As content attachment" and has attachments that  match search query, that article is only displayed once in search results.

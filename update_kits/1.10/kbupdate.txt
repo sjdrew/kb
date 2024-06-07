@@ -1,0 +1,12 @@
+VERSION=1.20
+DATE=2005-09-08 23:25:16
+
+KB Update to Version 1.20 
+------------------------------------ 
+
+- Adds ability to upload document as content which will be shown in a frame 
+
+- Additional settings for home page lists and sorting. 
+
+- Online upates support. 
+

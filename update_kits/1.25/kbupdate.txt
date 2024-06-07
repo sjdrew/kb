@@ -1,0 +1,19 @@
+VERSION=1.26
+DATE=2006-01-03 14:44:00
+
+- Improved import content feature to keep styles from word mht document.
+
+- Fixed Last login time not being set, when using cookie login.
+
+- In browse mode ignore obsolete articles
+
+- Mustread link on top left of home page. 
+
+- Order by which modified/new articles are dispalyed, applies to both Bulletins and New/Modified articles.
+
+- Bold unread Bulletins for current user.
+
+- Fixed query error when sorting on Article ID under Admin pages.
+
+- Fixed query error when searching for an illegal search string ie "and" "or" "a"
+

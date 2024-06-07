@@ -1,0 +1,13 @@
+VERSION=1.31
+DATE=2006-06-29 10:32:36
+
+VERSION 1.31 June 25 2006
+-------------------------
+
+- Improves Search results to ensure when a Search phrase matches an Article title and matches 
+  the Article "As Content" Attachment that the search results only displays the article once.
+  
+- Fixes a problem with sorting on Modified field on some search results.
+
+- Adds new Link on home page to display shortcut to articles current user has in Compose status
+
