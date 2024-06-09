@@ -1,0 +1,10 @@
+[09-Jun-2024 01:03:22 UTC] PHP Warning:  Undefined array key "LDAP_TEST" in /Users/sdrew/Projects/KB/lib/ldap.php on line 10
+[09-Jun-2024 01:03:22 UTC] PHP Warning:  Undefined property: DB::$failed in /Users/sdrew/Projects/KB/lib/subs_kb.php on line 12
+[09-Jun-2024 01:03:22 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function get_backtrace() in /Users/sdrew/Projects/KB/lib/db_sqlsrv.php:348
+Stack trace:
+#0 /Users/sdrew/Projects/KB/lib/db_sqlsrv.php(328): DB->sql('select * from S...', 'Record From Que...')
+#1 /Users/sdrew/Projects/KB/lib/subs_kb.php(15): DB->GetRecordFromQuery('select * from S...')
+#2 /Users/sdrew/Projects/KB/config.php(101): include_once('/Users/sdrew/Pr...')
+#3 /Users/sdrew/Projects/KB/home.php(6): include('/Users/sdrew/Pr...')
+#4 {main}
+  thrown in /Users/sdrew/Projects/KB/lib/db_sqlsrv.php on line 348

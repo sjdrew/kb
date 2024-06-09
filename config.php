@@ -4,6 +4,9 @@
 // Config and Init 
 //
 //////
+
+ini_set('error_log',__DIR__.'/logs/kb.log');
+
 DEFINE("APP_ROOT_DIR",str_replace("\\","/",dirname(__FILE__)) . "/"); 
 //
 // INSTANCE NAME is now Determined from install/Instance.ini file which is created during install
