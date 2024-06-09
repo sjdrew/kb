@@ -335,6 +335,7 @@ class JpGraphErrObject {
     // If aHalt is true then execution can't continue. Typical used for
     // fatal errors
     function Raise($aMsg,$aHalt=true) {
+	error_log("JPGraph error: $aMsg");
 	$aMsg = "<b>JpGraph Error:</b> ".$aMsg;
 	if( $aHalt )
 	    die($aMsg);
@@ -349,6 +350,7 @@ class JpGraphErrObject {
 class JpGraphErrObjectImg {
 
     function Raise($aMsg,$aHalt=true) {
+	error_log("JPGraph error: $aMsg");
 	if( headers_sent() ) {
 	    // Special case for headers already sent error. Dont
 	    // return an image since it can't be displayed

@@ -16,7 +16,7 @@
 			AuditTrail("EditNote",array('ID' => $ID));
 		}
 		if ($EmailNote && $NID && ID) {
-			$msg = SendNoteToAuthors($ID,$NID);
+			$msg = SendNoteToContacts($ID,$NID);
 		}
 	}
 	else {
@@ -85,7 +85,7 @@ function init()
 	<tr>
 		<td CLASS="form-hdr" style="height:30px; text-align:center" >Note Type: <? DBField("ArticleNotes","NoteType",$NoteType,0); ?> 
 		<input type="checkbox" checked name="EmailNote" value="1"> 
-		Send note by email to Author,Contacts,Reviewer,Approver
+		Send note by email to Contacts
 		</td>
 	</tr>
     <tr>

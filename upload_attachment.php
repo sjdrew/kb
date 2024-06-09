@@ -7,7 +7,7 @@
 <head>
 <title><? echo $AppDB->Settings->AppName ?> - Upload</title>
 <link REL="stylesheet" HREF="styles.css"></link>
-<SCRIPT LANGUAGE="JavaScript" SRC="misc.js"></SCRIPT>
+<SCRIPT LANGUAGE="JavaScript" SRC="lib/misc.js"></SCRIPT>
 </head>
 
 <body class="DialogBody">

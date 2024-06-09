@@ -357,7 +357,7 @@ if ($AppDB->Settings->RemedyARServer && $Priv >= PRIV_SUPPORT) {
 	$Fields["Summary"] = "";
 //	$Fields["ID"] = "";
 	$Fields["Product"] = "";
-	$Fields["Assigned_Group:Group"] = "";	
+	$Fields["Assigned_Group:Group"] = ":nowrap";	
 	//$Fields["Date"] = "75@DateStr:nowrap";
 	$LB5 = new ListBox("",$RemDB,$KEQuery,$Fields,"","/Reports/Case.php",'',1,"90%");
 	$LB5->NoFrame = 1;
@@ -381,8 +381,8 @@ if ($AppDB->Settings->RemedyARServer && $Priv >= PRIV_SUPPORT) {
 	$DBFields = "";
 	$DBFields["Title"] = "@fmt_title2";
 	$DBFields["Product"] = " ";	
-	$DBFields["GroupName:Group"] = " ";	
-	$DBFields["Date"] = ":align=right";			
+	$DBFields["GroupName:Group"] = ":nowrap";	
+	$DBFields["Date"] = ":align=right nowrap";			
 	$SelFields = "Articles.ID,Articles.ViewableBy,Articles.Title,Articles.Product,ContentLastModified,Groups.Name as GroupName,left(ContentLastModified,11) as Date";
 	$top = 100;
 	$lb4_sort = "ContentLastModified desc";
@@ -425,7 +425,7 @@ if ($AppDB->count_of($query)) {
 	$DBFields["Title"] = "@fmt_title";
 	$DBFields["Product"] = " ";	
 	if ($ShowGroups) {
-		$DBFields["GroupName:Group"] = " ";	
+		$DBFields["GroupName:Group"] = ":nowrap";	
 	}
 	$DBFields["Days"] = ":align=right";			
 	$SelFields = "Articles.ID,Articles.ViewableBy,Articles.Title,ContentLastModified,Articles.Product,Groups.Name as GroupName $DateReadSubQuery";
@@ -462,7 +462,7 @@ if ($AppDB->count_of($query)) {
 	$DBFields["Title"] = "@fmt_title";
 	$DBFields["Product"] = " ";
 	if ($ShowGroups) {
-		$DBFields["GroupName:Group"] = " ";	
+		$DBFields["GroupName:Group"] = ":nowrap";	
 	}
 	$DBFields["Hits"] = ":align=right";			
 	$SelFields = "Articles.ID,Articles.ViewableBy,Articles.Title,ContentLastModified,Articles.Product,Articles.Hits,Groups.Name as GroupName $DateReadSubQuery";

@@ -1,8 +1,22 @@
 <? include("config.php"); 
+
+function SetContentSection2($SectionName,$Content)
+{
+	global $AppDB;
+	global $CUser;
+	$RS = $AppDB->sql("select * from ContentSections where SectionName='$SectionName'");
+	if ($RS) $S = $AppDB->sql_fetch_obj($RS);
+	if ($S) {
+		$AppDB->sql("update ContentSections set LASTMODIFIEDBY='$CUser->UserID',LASTMODIFIED=$AppDB->sysTimeStamp, Content=".$AppDB->qstr($Content)." where SectionName='$SectionName'");
+	} else {
+		$AppDB->insert_record("ContentSections",$SETS);
+	}
+}
+
    RequirePriv(PRIV_ADMIN);
 
    if ($Save) {
-		SetContentSection($SectionName,$Content);
+		SetContentSection2($SectionName,$Content);
    }
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">

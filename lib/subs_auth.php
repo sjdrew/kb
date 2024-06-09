@@ -180,7 +180,7 @@ class CurrentUser {
 			return;
 		}
 		if ($this->AuthenticationMode == "NT") {
-			$this->NTAuthenticate(); // only returns if authenticated.
+			$this->NTAuthenticateFastCGI(); // only returns if authenticated.
 			$this->Login($this->UserID,"");
 			return;			
 		}
@@ -190,6 +190,60 @@ class CurrentUser {
 		header ("Location: logon.php?target=$target");
 		exit;
 	}
+
+
+  	function NTAuthenticateFastCGI() {
+		$auth = $_SERVER['HTTP_AUTHORIZATION'];
+	        if (!$auth) {
+      			header('WWW-Authenticate: NTLM');
+      			header('HTTP/1.0 401 Unauthorized');
+      			exit;
+    		}
+ 		   else { 
+   
+      if (strstr($auth, "NTLM")) {
+        $msg = base64_decode(substr($auth, 5));
+        if (ord($msg[8]) == 1) { // First step of authentication
+          $off = 18;
+          header('HTTP/1.0 401 Unauthorized');
+          header('WWW-Authenticate: NTLM TlRMTVNTUAACAAAAAAAAACgAAAABggAAAAICAgAAAAAAAAAAAAAAAA==');
+          exit;
+        }
+        elseif (ord($msg[8]) == 3) { // Third step of authentication
+          $off = 30;
+          $length = ord($msg[$off + 17]) * 256 + ord($msg[$off + 16]);
+          $offset = ord($msg[$off + 19]) * 256 + ord($msg[$off + 18]);
+          $s = substr($msg, $offset, $length);
+        }
+        else {
+          header('HTTP/1.0 401 Unauthorized');
+          header('WWW-Authenticate: NTLM');
+          return;
+        }
+
+        $results = array("domain" => "", "host" => "", "login" => "");
+
+        $length = ord($msg[$off + 1]) * 256 + ord($msg[$off]);
+        $offset = ord($msg[$off + 3]) * 256 + ord($msg[$off + 2]);
+        $results["domain"] = str_replace(chr(0), "", substr($msg, $offset, $length));
+
+        $length = ord($msg[$off + 9]) * 256 + ord($msg[$off + 8]);
+        $offset = ord($msg[$off + 11]) * 256 + ord($msg[$off + 10]);
+        $results["login"] = str_replace(chr(0), "", substr($msg, $offset, $length));
+
+        $length = ord($msg[$off + 17]) * 256 + ord($msg[$off + 16]);
+        $offset = ord($msg[$off + 19]) * 256 + ord($msg[$off + 18]);
+        $results["host"] = str_replace(chr(0), "", substr($msg, $offset, $length));
+
+  	      $this->UserID = strtolower($results['login']);
+		$this->NTDomain = strtolower($results['domain']);
+		return $this->UserID;
+
+      			}
+    		} 
+ 	 }
+
+
 
 	function NTAuthenticate() 
 	{

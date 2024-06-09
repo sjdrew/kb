@@ -3,10 +3,10 @@
  * File: admin_article.php
  * Purpose: Creating/Editing of Articles
  */
-
 include("config.php"); 
 RequirePriv(PRIV_GROUP);
 $ID = GetVar("ID");
+
 if (substr($ID,0,2) == "KB") $ID = (int)substr($ID,2);
 set_time_limit(180);
 

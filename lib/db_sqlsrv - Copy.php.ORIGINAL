@@ -45,14 +45,7 @@ class DB
 		}	
 		$this->UseGMT = 0;
 					
-		$this->lnk = sqlsrv_connect($dbhost, 
-            array(
-                "UID" => $dbuser,
-                "PWD" => $dbpass,
-                'Database' => $dbname,
-                "Encrypt" => "no",
-                "TrustServerCertificate" => "yes"
-            ));
+		$this->lnk = sqlsrv_connect($dbhost, array("UID" => $dbuser,"PWD" => $dbpass,'Database' => $dbname));
 		if ($abort && !$this->lnk) {
 			$this->GetLastError();
 			global $db_err_routine;

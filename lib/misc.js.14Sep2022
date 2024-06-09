@@ -419,7 +419,7 @@ function FindElement(e)
 		return obj;
 	}
 	else {
-		return(document.all(e)); 
+		return(document.all(e));
 	}
 }
 

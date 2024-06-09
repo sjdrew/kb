@@ -2,7 +2,7 @@
  * Styles
  */
 body, td, th, textarea {
-    font-family:  Arial, Helvetica, sans-serif, Geneva, "Bitstream Vera Sans","Trebuchet MS" ;
+    font-family:  Arial, Helvetica, sans-serif, Geneva, "Bitstream Vera Sans","Trebuchet MS",calibri,system ;
     font-size: 12px; 
     }
 

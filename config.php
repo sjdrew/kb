@@ -1,11 +1,10 @@
-<script language="php">
+<?php
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // Config and Init 
 //
 //////
 DEFINE("APP_ROOT_DIR",str_replace("\\","/",dirname(__FILE__)) . "/"); 
-
 //
 // INSTANCE NAME is now Determined from install/Instance.ini file which is created during install
 // and defaults to KB if not found
@@ -32,7 +31,7 @@ DEFINE("SEARCH_OFFICE",1);
 DEFINE("NOTIFY_ON_ERROR","user@domain.com"); // Used only if cannot get default from Database settings
 DEFINE("DEFAULT_SMTP_SERVER","mail.mydomain.com"); // used only if cannot get settings from database
 
-
+DEFINE("TTF_DIR",APP_ROOT_DIR."graph/fonts/");
 DEFINE("DBNAME","$_DBNAME");
 DEFINE("DBHOST","$_DBHOST");
 DEFINE("DBUSER","KBApp");
@@ -100,4 +99,4 @@ include_once("lib/subs_kb.php");
 include_once("lib/template.php");
 //nocache();
 
-</script>
+?>
