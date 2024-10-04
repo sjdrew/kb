@@ -7,6 +7,10 @@
  * Detect and allow running from the cmd line, so this can be scheduled
  * as php admin_ad_user_sync.php
  */
+
+$Sync = GetVar('Sync');
+$msg = GetVar('msg');
+
 if (!$_SERVER['REQUEST_URI']) {
 	$noauth = true;
 	include("config.php"); 
@@ -21,7 +25,7 @@ include("config.php");
   
    RequirePriv(PRIV_ADMIN);
 
-if ($_GET['Sync']) {
+if ($Sync) {
 	AD_User_Sync($msg);
 	$msg = nl2br($msg);	
 }
@@ -46,7 +50,7 @@ function ParseForm(f)
 }
 </script>
 <? include("header.php"); ?>
-<form onSubmit="ParseForm(this)" name=form action="<? echo $PHP_SELF ?>" method="get">
+<form onSubmit="ParseForm(this)" name=form action="<? echo $_SERVER['PHP_SELF'] ?>" method="get">
 <table width="100%" border=0 cellspacing=0 cellpadding=0><tr>
 <td style="vertical-align:top" width="25%" class="subhdr">
 <img src="images/users_sync.jpg" width="56" height="59"></td>
@@ -54,7 +58,7 @@ function ParseForm(f)
 </tr></table>
 
 <? 
-	if (!$_GET['Sync']) {
+	if ($Sync) {
 ?>
 
 <div align="center">

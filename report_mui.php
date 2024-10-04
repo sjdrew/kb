@@ -1,6 +1,24 @@
 <?  
 	include("config.php");
 	RequirePriv(PRIV_GROUP);
+
+    $Export = GetVar('Export');
+    $S = GetVar('S');
+    $Search = GetVar('Search');
+    $CREATEDBY = GetVar('CREATEDBY');
+    $CREATED = GetVar('CREATED');
+    $StartDate = GetVar('StartDate');
+    $EndDate = GetVar('EndDate');
+    $GroupID = GetVar('GroupID');
+    $Prompter = GetVar('Prompter');
+    $Escalated = GetVar('Escalated');
+    $ServiceName = GetVar('ServiceName');
+    $EndTime = GetVar('EndTime');
+    $StartTime = GetVar('StartTime');
+    $msg = GetVar('msg');
+    $Back = GetVar('Back');
+
+
 	$Table = "Messages";
 	if ($Export) {   	
 		$defaultsaveas = "MUI_Report_".date("YmdHi",time()) . ".csv";
@@ -31,36 +49,36 @@ function parse()
 </script>
 <center>
 <br>
-<form onSubmit="return parse()" method="Get" name="form" Action="<? echo $PHP_SELF ?>">
+<form onSubmit="return parse()" method="Get" name="form" Action="<? echo $_SERVER['PHP_SELF'] ?>">
 <?  hidden("S",$S);
 ShowMsgBox($msg,"center");
 }
 
 $S = GetVar("S");
 
-if ($_GET[Back]) $S = "";
+if ($Back) $S = "";
 
 if ($S) {
 	$q = MessageQuery("",1);
 
-	if (trim($CREATEDBY)) {
+	if (trim((string)$CREATEDBY)) {
 		$q .= " and $Table.CREATEDBY = '$CREATEDBY' ";
 		$qtxt = "$and Created by $CREATEDBY ";
 	}
 	
-	if (trim($Search)) {
-		$Search = str_replace('"',"",trim($Search));
+	if (trim((string)$Search)) {
+		$Search = str_replace('"',"",trim((string)$Search));
 		$Search = str_replace("'","",$Search);
 		if ($Search) {
 			$q .= " and (Subject like '%$Search%' or Message like '%$Search%') ";
 		}
 	}
 	
-	if (trim($GroupID) && $GroupID > 0) {
+	if (trim((string)$GroupID) && $GroupID > 0) {
 		$q .= " and $Table.GroupID = $GroupID";
 	}
 		
-	if (trim($ServiceName)) {
+	if (trim((string)$ServiceName)) {
 		$q .= " and ServiceName = '$ServiceName'";
 	}
 	
@@ -68,18 +86,18 @@ if ($S) {
 	$q .= " and $Table.Type like 'MUI-%'";
 
 	
-	if (trim($Escalated)) {
+	if (trim((string)$Escalated)) {
 		$q .= " and Escalated = '$Escalated'";
 	}
 	
-	if (trim($Prompter)) {
+	if (trim((string)$Prompter)) {
 		$q .= "and Prompter = '$Prompter'";
 	}
 	
-	if (trim($StartTime)) {
+	if (trim((string)$StartTime)) {
 		$q .= "and StartTime >= '$StartTime'";
 	}
-	if (trim($EndTime)) {
+	if (trim((string)$EndTime)) {
 		$q .= "and StartTime <= '$EndTime'";
 	}
 
@@ -117,7 +135,7 @@ function fmt_ticket($str)
 	if ($Export) exit;
 ?> 
 
-<table border="0" cellspacing="0" cellpadding="8" width="90%"><tr><td align="left"><button onClick="window.location='report_mui.php?Back=1&<? echo $_SERVER[QUERY_STRING] ?>'">Back</button></td></tr></table>
+<table border="0" cellspacing="0" cellpadding="8" width="90%"><tr><td align="left"><button onClick="window.location='report_mui.php?Back=1&<? echo $_SERVER['QUERY_STRING'] ?>'">Back</button></td></tr></table>
 <?
 } else {
 ?>

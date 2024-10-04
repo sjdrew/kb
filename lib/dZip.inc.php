@@ -15,7 +15,7 @@ class dZip{
 		$this->overwrite = $overwrite;
 	}
 	Function addDir($dirname, $fileComments=''){
-		if(substr($dirname, -1) != '/')
+		if(substr((string)$dirname, -1) != '/')
 			$dirname .= '/';
 		$this->addFile(false, $dirname, $fileComments);
 	}
@@ -29,7 +29,7 @@ class dZip{
 		}
 		
 		// $filename can be a local file OR the data wich will be compressed
-		if(substr($cfilename, -1)=='/'){
+		if(substr((string)$cfilename, -1)=='/'){
 			$details['uncsize'] = 0;
 			$data = '';
 		}
@@ -43,7 +43,7 @@ class dZip{
 			return false;
 		}
 		else{
-			$details['uncsize'] = strlen($filename);
+			$details['uncsize'] = strlen((string)$filename);
 			// DATA is given.. use it! :|
 		}
 		
@@ -56,8 +56,8 @@ class dZip{
 		}
 		else{ // otherwise, compress it
 			$zdata = gzcompress($data);
-			$zdata = substr(substr($zdata, 0, strlen($zdata) - 4), 2); // fix crc bug (thanks to Eric Mueller)
-			$details['comsize'] = strlen($zdata);
+			$zdata = substr(substr((string)$zdata, 0, strlen((string)$zdata) - 4), 2); // fix crc bug (thanks to Eric Mueller)
+			$details['comsize'] = strlen((string)$zdata);
 			$details['vneeded'] = 10;
 			$details['cmethod'] = 8;
 		}
@@ -88,14 +88,14 @@ class dZip{
 		fwrite($fh, pack('V', $details['crc_32']));  // crc-32
 		fwrite($fh, pack('I', $details['comsize'])); // compressed_size
 		fwrite($fh, pack('I', $details['uncsize'])); // uncompressed_size
-		fwrite($fh, pack('s', strlen($cfilename)));   // file_name_length
+		fwrite($fh, pack('s', strlen((string)$cfilename)));   // file_name_length
 		fwrite($fh, pack('s', 0));  // extra_field_length
 		fwrite($fh, $cfilename);    // file_name
 		// ignoring extra_field
 		fwrite($fh, $zdata);
 		
 		// Append it to central dir
-		$details['external_attributes']  = (substr($cfilename, -1)=='/'&&!$zdata)?16:32; // Directory or file name
+		$details['external_attributes']  = (substr((string)$cfilename, -1)=='/'&&!$zdata)?16:32; // Directory or file name
 		$details['comments']             = $fileComments;
 		$this->appendCentralDir($cfilename, $details);
 		$this->files_count++;
@@ -120,9 +120,9 @@ class dZip{
 			$cdrec .= pack('V', $cd['crc_32']);  // crc32
 			$cdrec .= pack('V', $cd['comsize']); // compressed filesize
 			$cdrec .= pack('V', $cd['uncsize']); // uncompressed filesize
-			$cdrec .= pack('v', strlen($filename)); // file comment length
+			$cdrec .= pack('v', strlen((string)$filename)); // file comment length
 			$cdrec .= pack('v', 0);                // extra field length
-			$cdrec .= pack('v', strlen($cd['comments'])); // file comment length
+			$cdrec .= pack('v', strlen((string)$cd['comments'])); // file comment length
 			$cdrec .= pack('v', 0); // disk number start
 			$cdrec .= pack('v', 0); // internal file attributes
 			$cdrec .= pack('V', $cd['external_attributes']); // internal file attributes
@@ -139,9 +139,9 @@ class dZip{
 		fwrite($fh, pack('v', 0)); // number of the disk with the start of the central directory
 		fwrite($fh, pack('v', $this->files_count)); // total # of entries "on this disk" 
 		fwrite($fh, pack('v', $this->files_count)); // total # of entries overall 
-		fwrite($fh, pack('V', strlen($cdrec)));     // size of central dir 
+		fwrite($fh, pack('V', strlen((string)$cdrec)));     // size of central dir 
 		fwrite($fh, pack('V', $before_cd));         // offset to start of central dir
-		fwrite($fh, pack('v', strlen($zipComments))); // .zip file comment length
+		fwrite($fh, pack('v', strlen((string)$zipComments))); // .zip file comment length
 		fwrite($fh, $zipComments);
 		
 		fclose($fh);

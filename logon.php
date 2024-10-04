@@ -1,8 +1,4 @@
 <?
-	if ($NewUser) {
-		header("location: register.php");
-		exit;
-	}
 	 
 	$auth_in_progress = true;
 	include("config.php"); 
@@ -15,9 +11,9 @@
 		exit;
 	}
 	
-	if ($Login) {
+	if (GetVar('Login')) {
 		$CUser->AutoLogin = $AutoLogin;
-		$err = $CUser->Login($UserID,$Password,$TZOffset);
+		$err = $CUser->Login(GetVar('UserID'),GetVar('Password'),GetVar('TZOffset'));
 		if ($err == "OK") {
 			if ($target) {
 				header("location: $target");
@@ -30,7 +26,7 @@
 		}
 	}
 	else {
-		$empw = $_POST["empw"];
+		$empw = GetVar("empw");
 		if ($empw && $UserID) {
 			EmailPassword($UserID,$err);
 		}

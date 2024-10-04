@@ -41,7 +41,7 @@ function NowDateTime()
 
 function DateStr($d)
 {
-	return substr($d,0,10);
+	return substr((string)$d,0,10);
 }
 
 function DateTimeStrFromValue($d,$FromGMT=0)
@@ -68,7 +68,7 @@ function AddDays($date,$days)
 //
 function ExtractTime($date)
 {
-	return substr($date,11,5);
+	return substr((string)$date,11,5);
 }
 
 //
@@ -79,7 +79,7 @@ function MonthAdd($date = "", $AddMonths = 0)
 	if ($date == "") {
 		$date = Now();
 	}
-	list($year,$mon,$day) = split('-',$date);
+	list($year,$mon,$day) = explode('-',$date);
 	//$day = "01";
 	$mon += $AddMonths;
 	if ($mon > 12) {
@@ -97,10 +97,10 @@ function MonthAdd($date = "", $AddMonths = 0)
 function DateTimeStr($datestr,$gmt = 0)
 {
 	if ($gmt) {
-		$DVal = str_replace("-","",substr($datestr,0,10));
+		$DVal = str_replace("-","",substr((string)$datestr,0,10));
 		return DateTimeStrFromValue(mktimefromstr($datestr,0),1);
 	} else {
-		return substr($datestr,0,16);
+		return substr((string)$datestr,0,16);
 	}
 }
 
@@ -199,9 +199,9 @@ function gmttolocal($t)
 function timetogmt($t) 
 {
 	$gmtoff = date("O" , $t );
-	$sign = substr($gmtoff,0,1);
-	$hrs = substr($gmtoff,1,2);
-	$mins = substr($gmtoff,3,2);
+	$sign = substr((string)$gmtoff,0,1);
+	$hrs = substr((string)$gmtoff,1,2);
+
 	$val = (60 * mins) + (3600 * $hrs);
 	$t = ($sign == '-') ? ($t + $val) : ($t - $val);
 	return $t;	
@@ -209,10 +209,11 @@ function timetogmt($t)
 
 function DateFieldsFromStr($datetimestr)
 {
+    $tm = new stdClass();
 	// expecting YYYY-MM-DD HH:MM:SS
-	list($datestr, $timestr) = split(' ',$datetimestr);
-	list($tm->year,$tm->mon,$tm->day) = split('-',$datestr);
-	list($tm->hour,$tm->min,$tm->sec) = split(':',$timestr);
+	list($datestr, $timestr) = explode(' ',$datetimestr);
+	list($tm->year,$tm->mon,$tm->day) = explode('-',$datestr);
+	list($tm->hour,$tm->min,$tm->sec) = explode(':',$timestr);
 
 	return $tm;
 }
@@ -220,10 +221,10 @@ function DateFieldsFromStr($datetimestr)
 function mktimefromstr($datetimestr,$ConvertToGMT=0)
 {
 	// expecting YYYY-MM-DD HH:MM:SS
-	if (strlen($datetimestr) == 10) {
+	if (strlen((string)$datetimestr) == 10) {
 		$datetimestr .= " 00:00:00";
 	}
-	if (strlen($datetimestr) == 17) {
+	if (strlen((string)$datetimestr) == 17) {
 		$datetimestr .= ":00";
 	}
 	$tm = DateFieldsFromStr($datetimestr);

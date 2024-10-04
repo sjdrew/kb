@@ -5,7 +5,6 @@
 	include("config.php");
 
 	global $db_err_routine;
-	$db_err_routine = print_db_err;
 	
 // Call back override to print any database 
 function print_db_err(&$db,$sql,$errno,$errmsg,$info="")
@@ -17,6 +16,8 @@ function print_db_err(&$db,$sql,$errno,$errmsg,$info="")
 		
 	exit();
 }
+
+    $db_err_routine = 'print_db_err';
 
 	///////////////////////////////////////////////////////////////////////
 	//
@@ -46,8 +47,8 @@ function print_db_err(&$db,$sql,$errno,$errmsg,$info="")
 		$KBID = $Data[1];
 		$OLD_URL = $Data[0];
 		print $KBID ;
-		if (substr($KBID,0,2) == "KB") {
-			$KBID = substr($KBID,2);
+		if (substr((string)$KBID,0,2) == "KB") {
+			$KBID = substr((string)$KBID,2);
 		}
 		$KBID = (int)$KBID;
 		

@@ -31,7 +31,7 @@
 					"DATEDIFF(minute,CREATED,getdate()) < 30 order by CREATED desc");
 
 	if ($MyLastHit) {
-		$HFields[CREATED] = "GetDate()";
+		$HFields['CREATED'] = "GetDate()";
 		$AppDB->update_record($MyLastHid->ID,'Hits',$HFields,DB_NOAUDIT_UPDATE);
 	}
 	else {
@@ -55,7 +55,7 @@
     <table width="100%" <? echo $FORM_STYLE ?> >
         <? if ($M) { ?>
         <tr>
-          <td width="24%" class="form-hdr2" style="align:left"> Date:</td>
+          <td width="24%" class="form-hdr2"> Date:</td>
           <td width="76%" class="form-data">
                 <? echo $M->CREATED; ?> 
           </td>
@@ -89,13 +89,8 @@
         <tr>
           <td align="left" nowrap class="form-hdr2">Ticket Number: </td>
           <td class="form-data"><? 
-		  	if ($AppDB->Settings->RemedyARServer) {
-				echo "<b><a target=_blank href=\"http://itshd/UpdateCase.asp?Case=$M->TicketNumber\" title=\"Click to view\">$M->TicketNumber</a></b>"; 
-			} else echo $M->TicketNumber;
+		  	 echo $M->TicketNumber;
 			?>
-		  <? if ($M->TicketNumber && $AppDB->Settings->RemedyARServer) { ?>
-		  	&nbsp;<a href="OpenTicket.php?Ticket=<? echo $M->TicketNumber . "&Server=" . $AppDB->Settings->RemedyARServer; ?>"><img src="images/artask.gif" title="Open with Remedy User program" border="0"></a>
-		 <? 	}
 		  ?>
 		  </td>
         </tr>

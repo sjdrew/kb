@@ -26,7 +26,7 @@ function onapply()
 	window.close();
 }
 </SCRIPT>
-<form name=form action="<? echo $PHP_SELF ?>" method="post">
+<form name=form action="<? echo $_SERVER['PHP_SELF'] ?>" method="post">
 <div align="center">
 <? 
 	$Modes = array("Read","Write","Approval");

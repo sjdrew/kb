@@ -1,0 +1,5 @@
+/env.ini
+*.log
+/Files/*
+.thumb*
+

@@ -27,58 +27,71 @@ function parse()
 </script>
 <center>
 <br>
-<form onSubmit="return parse()" method="Get" name="form" Action="<? echo $PHP_SELF ?>">
+<form onSubmit="return parse()" method="Get" name="form" Action="<? echo $_SERVER['PHP_SELF'] ?>">
 <?  hidden("S",$S);
 ShowMsgBox($msg,"center");
 
 $S = GetVar("S");
+$Back = GetVar('Back');
 
-if ($_GET[Back]) $S = "";
+if ($Back) $S = "";
 
 if ($S) {
 	$q = MessageQuery("",1);
 
-	if (trim($CREATEDBY)) {
+    $CREATEDBY = GetVar('CREATEDBY');
+    $Search = GetVar('Search');
+    $GroupID = GetVar('GroupID');
+    $Type = GetVar('Type');
+    $ServiceName = GetVar('ServiceName');
+    $STATUS = GetVar('STATUS');
+    $Escalated = GetVar('Escalated');
+    $Prompter = GetVar('Prompter');
+    $StartTime = GetVar('StartTime');
+    $EndTime = GetVar('EndTime');
+    $Sort = GetVar('Sort');
+    
+	if (trim((string)$CREATEDBY)) {
 		$q .= " and $Table.CREATEDBY = '$CREATEDBY' ";
 		$qtxt = "$and Created by $CREATEDBY ";
 	}
 	
-	if (trim($Search)) {
-		$Search = str_replace('"',"",trim($Search));
+	if (trim((string)$Search)) {
+		$Search = str_replace('"',"",trim((string)$Search));
 		$Search = str_replace("'","",$Search);
 		if ($Search) {
 			$q .= " and (Subject like '%$Search%' or Message like '%$Search%') ";
 		}
 	}
 	
-	if (trim($GroupID) && $GroupID > 0) {
+	if (trim((string)$GroupID) && $GroupID > 0) {
 		$q .= " and $Table.GroupID = $GroupID";
 	}
 	
-	if (trim($Type)) {
+	if (trim((string)$Type)) {
 		$q .= " and Type = '$Type'";
 	}
 	
-	if (trim($ServiceName)) {
+	if (trim((string)$ServiceName)) {
 		$q .= " and ServiceName = '$ServiceName'";
 	}
 	
-	if (trim($STATUS)) {
+	if (trim((string)$STATUS)) {
 		$q .= " and $Table.STATUS='$STATUS'";
 	}
 	
-	if (trim($Escalated)) {
+	if (trim((string)$Escalated)) {
 		$q .= " and Escalated = '$Escalated'";
 	}
 	
-	if (trim($Prompter)) {
+	if (trim((string)$Prompter)) {
 		$q .= "and Prompter = '$Prompter'";
 	}
 	
-	if (trim($StartTime)) {
+	if (trim((string)$StartTime)) {
 		$q .= "and StartTime >= '$StartTime'";
 	}
-	if (trim($EndTime)) {
+	if (trim((string)$EndTime)) {
 		$q .= "and StartTime <= '$EndTime'";
 	}
 
@@ -108,7 +121,7 @@ function fmt_bb_icon($str,$ID,$R)
 	$LB->Display();
 ?> 
 
-<table border="0" cellspacing="0" cellpadding="8" width="90%"><tr><td align="left"><button onClick="window.location='admin_messages.php?Back=1&<? echo $_SERVER[QUERY_STRING] ?>'">Back</button></td></tr></table>
+<table border="0" cellspacing="0" cellpadding="8" width="90%"><tr><td align="left"><button onClick="window.location='admin_messages.php?Back=1&<? echo $_SERVER['QUERY_STRING'] ?>'">Back</button></td></tr></table>
 <?
 } else {
 ?>

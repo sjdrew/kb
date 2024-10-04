@@ -14,7 +14,7 @@
  */
 
 $_tzoff = date("O");
-$_tzfraction =  (((substr($_tzoff,1,2) * 60)  +  substr($_tzoff,4,2)) /1440);
+$_tzfraction =  (((substr((string)$_tzoff,1,2) * 60)  +  substr((string)$_tzoff,4,2)) /1440);
 
 DEFINE("SERVER_GMT_OFFSET",$_tzfraction);
 DEFINE("DB_NOSTOP_ON_ERROR",8);
@@ -35,8 +35,12 @@ class DB
 	var $ErrorMsg;
 	var $ErrorNo;
 	var $databaseType = 'mssql';
+    var $failed;
+    var $Settings;
+    var $databaseName;
+    var $ErrMsg;
 	
-	function DB($dbhost,$dbtype,$dbuser,$dbpass,$dbname,$abort=1)
+	function __construct($dbhost,$dbtype,$dbuser,$dbpass,$dbname,$abort=1)
 	{
 		if ($dbname == "") {
 			echo "<br>Internal Error open called with no db name specified<br>";
@@ -51,6 +55,7 @@ class DB
                 "PWD" => $dbpass,
                 'Database' => $dbname,
                 "Encrypt" => "no",
+                "CharacterSet" => "UTF-8",
                 "TrustServerCertificate" => "yes"
             ));
 		if ($abort && !$this->lnk) {
@@ -70,6 +75,7 @@ class DB
 	function GetLastError() 
 	{
       	if( ($errors = sqlsrv_errors() ) != null) {
+            $this->ErrMsg = '';
         	foreach( $errors as $error) {
 				if ($this->ErrorNo == "") $this->ErrorNo = $error['code'];
 				$this->ErrorMsg .=  "SQLSTATE: ".$error[ 'SQLSTATE']."\n";
@@ -101,8 +107,8 @@ class DB
 
 	function qstr($s)
 	{
-		$s = str_replace('\"','"',$s);
-		$s = str_replace("\\'","'",$s);
+		//$s = str_replace('\"','"',$s);
+		//$s = str_replace("\\'","'",$s);
 		$s = str_replace("'","''",$s);
 		return "'$s'";
 	}
@@ -136,7 +142,7 @@ class DB
 	
 		if($this->GetLastError() && $this->ErrorNo != 7657 && $this->ErrorNo != 8152 && $this->ErrorNo != 9927) { 
 			// ignore full text warning errors, and truncation errors
-			error_log("SQL Error: " . $this->ErrorMsg . ", Query: $sql");
+			Logger("SQL Error: " . $this->ErrorMsg . ", Query: $sql",'ERROR');
 			if ($db_err_routine) {
 				return($db_err_routine($sql,$this->ErrorNo,$this->ErrorMsg,$info));
 			}
@@ -161,24 +167,14 @@ class DB
 		$Fields = $this->db_field_types($table);	
 	
 		if( $_POST ) { 
-   
-   			reset( $_POST );
-			while( $key = key( $_POST ) ) {
-				//
-				// Skip posted fields that do not exist in DB Table
-				//
-				if ($Fields[$key]) {
-					$Value = trim($_POST[$key]);
-					if ($Value == "") {
-						$Value = NULL;
-					}
-					//else if (substr($Fields[$key],0,3) != "int") {
-					//	$Value=$this->quote($Value);
-					//}
-    	    		$SETS[$key] = $Value;
-        		}
-	      		next( $_POST );
-   			}  
+            foreach($_POST as $key => $value) {
+                if (array_key_exists($key,$Fields)) {
+                    $SETS[$key] = trim((string)$value);
+                    if ($SETS[$key] === "") {
+                        $SETS[$key] = null;
+                    }
+                }
+            }
     		return($this->insert_record($table,$SETS));
 	 	}
  		return 0;
@@ -203,7 +199,7 @@ class DB
 	
 		if( $_POST ) { 
    
-			while (list ($key, $val) = each ($_POST)) {
+            foreach($_POST as $key => $val) {
 				//
 				// Skip posted fields that do not exist in DB Table, or have not changed.
 				//
@@ -212,16 +208,16 @@ class DB
 				// Todo if we are saving a datetime field, we could detect this and convert
 				// to GMT before saving (and before comparing)
 				//
-				$val = trim($val);
+				$val = trim((string)$val);
 				
 				if ($ModifyAllFlag && $val == "") continue;
 			
-				if ($val != $R[$key] && $Fields[$key]) {
+				if (array_key_exists($key,$Fields) && $val != $R[$key]) {
 					//
 					// If datetime field and new value does not include time, then just compare date part
 					//
-					if ($Fields[$key] == "datetime" && strlen($val) < 12) {
-						$R[$key] = substr($R[$key],0,10);
+					if ($Fields[$key] == "datetime" && strlen((string)$val) < 12) {
+						$R[$key] = substr((string)$R[$key],0,10);
 						if ($val == $R[$key]) continue;
 					}
 					$NewValue = $val; 				
@@ -242,7 +238,8 @@ class DB
 	function db_field_types($table)
 	{
 		$Fields = array();
-		list($dbname,$dbo,$acttable) = split('\.',$table); 
+        $olddb = null;
+		@list($dbname,$dbo,$acttable) = explode('.',$table); 
 		if ($acttable) {
 			$olddb = $this->databaseName;
 			$this->select_db($dbname);
@@ -267,6 +264,7 @@ class DB
 		$Cols = array();
 		if ($res) {
 			while($Rec = $this->sql_fetch_array($res)) {
+                $Cols[$Rec['col']] = (object)[];
 				$Cols[$Rec['col']]->name = $Rec['col'];
 				$Cols[$Rec['col']]->max_length = $Rec['max_length'];
 				$Cols[$Rec['col']]->type = $Rec['name'];
@@ -298,7 +296,7 @@ class DB
 			exit;
 		}
 		$q = "select * from $table where ID=$id $and";
-		$result = $this->sql($q,"Get Record Associated");
+		$result = $this->sql($q);
 		if (!$result) {
 			return 0;
 		}
@@ -314,7 +312,7 @@ class DB
 	function MakeArrayFromQuery($q)
 	{
 		$a = array();
-		$result = $this->sql($q,"MakeArrayFromQuery");
+		$result = $this->sql($q);
 		if ($result) {
 			while($R = $this->sql_fetch_obj($result)) {
 				$a[$R->ID] = $R->ITEM;
@@ -323,9 +321,9 @@ class DB
 		return $a;
 	}
 
-	function GetRecordFromQuery($q)
+	function GetRecordFromQuery($q,$params=[])
 	{
-		$result = $this->sql($q,"Record From Query");
+		$result = $this->sql($q,$params);
 		if (!$result) {
 			return 0;
 		}
@@ -340,17 +338,18 @@ class DB
 	} 
 
 
-	function sql($q,$info="",$stoponerr=1)
+	function sql($q,$params=[],$stoponerr=1)
 	{
+        if (!$params) $params = [];
 		$start = $this->getmicrotime();
 		if ($this->lnk == "") {
 			echo "sql function called with no Database connection. <br>";
 			get_backtrace();
 			exit;
 		}
-		$rs = sqlsrv_query($this->lnk,$q);
+		$rs = sqlsrv_query($this->lnk,$q,$params);
 		if ($stoponerr)
-			$this->sqlerr($q,$info);
+			$this->sqlerr($q,print_r($params,1));
 					
 		$end = $this->getmicrotime();
 		$this->QueryTime = sprintf("%.3f",$end - $start);
@@ -368,7 +367,10 @@ class DB
 	{
 		if (!$rs) return;
 		$rec = sqlsrv_fetch_object($rs);
+        $newrec = null;
+        $i = 0;
 		if ($rec) {
+            $newrec = new stdClass();
 			foreach($rec as $k => $v) {
 				++$i;
 				if (!$k) $k = $i;
@@ -407,9 +409,9 @@ class DB
 		}
 		if (stristr($q,"select ")) {
 			$From = strripos($q," from ");
-			$q = "select count(*) as Num " . substr($q,$From);
+			$q = "select count(*) as Num " . substr((string)$q,$From);
 			if ($p = strripos($q,'order by')) {
-				$q = substr($q,0,$p);
+				$q = substr((string)$q,0,$p);
 			}
 		}
 		$res = $this->sql($q,'',0); // ignore errors
@@ -425,9 +427,15 @@ class DB
 		return $this->count_of($q);
 	}
 
+    /**
+     * 
+     * @return array|null
+     */
 	function sql_fetch_array(&$rs)
 	{
 		if (!$rs) return;
+        $i = 0;
+        $newrec = null;
 		$rec = sqlsrv_fetch_array($rs,SQLSRV_FETCH_ASSOC);
 		if ($rec) {
 			foreach($rec as $k => $v) {
@@ -467,7 +475,7 @@ class DB
 			while(!feof($fp)) {
 				$buffer = trim(fgets($fp));  // 4.3 rewmoved size, auto
 				++$ln;
-				if (substr($buffer,0,1) == "#") {
+				if (substr((string)$buffer,0,1) == "#") {
 					continue;
 				}
 				if ($buffer == "\n") 
@@ -475,10 +483,10 @@ class DB
 
 				$q = $q . $buffer;
 					
-				if (substr($buffer,strlen($buffer)-1,1) == ";") {
+				if (substr((string)$buffer,strlen((string)$buffer)-1,1) == ";") {
 					$q = str_replace(";\n","",$q);
 					$q = str_replace("\n","",$q);
-					$result = $this->sql($q,"SQL Execute $filename",0);
+					$result = $this->sql($q,"",0);
 					if ($this->GetLastError()) {
 						if ($ignore_dups == 0 || ($this->ErrorNo != 1060 && $this->ErrorNo != 1050) && $continue_on_error == 0 ) {
 							$this->sqlerr($q,"Line: $ln SQL Execute Error");
@@ -486,7 +494,7 @@ class DB
 					   	if ($verbose) echo "<tr><td>Line: $ln </td><td>" . $this->ErrorNo .": ". $this->ErrorMsg. "</td></tr>";
 					}
 					else {
-					   	if ($verbose) echo "<tr><td>Line: $ln </td><td>affected rows: " . $this->Affected_Rows() . "</td></tr>";
+					   	if ($verbose) echo "<tr><td>Line: $ln </td><td>affected rows: " . $this->AffectedRows($result) . "</td></tr>";
 					}
 					
 					$q = "";
@@ -530,20 +538,24 @@ class DB
 		}
 		
 		$q = "update $table set ";
+        
+        $comma = '';
+        $params = [];
 		foreach($SETS as $F => $V) {
 			$q .= $comma . " $F = ";
-			if (trim($V) == "") {
+			if (trim((string)$V) == "") {
 				$q .= "NULL";
 			} else if ($V == "GetDate()") {
 				$q .= $V;
 			} else {
-				$q .= $this->qstr($V);
+                $q .= "?";
+				$params[] = $V;
 			}
 			$comma = ',';
 		}
+        
 		$q .= " where ID=$ID";
-		
-    	if (!$this->sql($q,"Updating Record","",($flag & DB_NOSTOP_ON_ERROR))) {
+    	if (!$this->sql($q,$params,($flag & DB_NOSTOP_ON_ERROR))) {
     		return 0; // Caller to check error code if return rather than stop.
 		}	
 		return(1);   	
@@ -566,6 +578,7 @@ class DB
 			exit;
 		}
 		
+        $stamped = 0;
 		foreach($Fields as $F => $V) {
 			if ($StripID && $F == "ID") continue;
 			if ($F == "CREATEDBY") $stamped = 1;
@@ -586,20 +599,23 @@ class DB
 		}
 		$q = "insert into $table (" . implode(",",array_keys($KF)) . ") ";
 		$q .= "VALUES (";
+        $comma = '';
+        $params = [];
 		foreach($InsertFields as $K => $V) {
-			if (trim($V) == "") {
+			if (trim((string)$V) == "") {
 				$q .= $comma . "NULL";
 			} else if ($V == "GetDate()") {
 				$q .= $comma . $V;
 			} else {
-				$q .= $comma . $this->qstr($V);
+				$q .= $comma . "?";
+                $params[] = $V;
 			}
 			$comma = ',';
 		}
 		$q .= ") ";
 		$q .= "; SELECT SCOPE_IDENTITY() AS ID";
 		
-		$res = $this->sql($q,"Inserting Record");
+		$res = $this->sql($q,$params);
     	if (!$res) {
 	    	return 0;
 		}
@@ -626,7 +642,7 @@ class DB
 		if ($audit) {
 			//	echo("$sql<br>");
 		}	
-    	if (!$this->sql($q,"Deleting Record")) {
+    	if (!$this->sql($q)) {
     		return 0;
 		}
 		return($id);   	
@@ -713,4 +729,3 @@ class DB
 		return $t;
 	}
 }
-?>

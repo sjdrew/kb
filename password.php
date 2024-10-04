@@ -38,7 +38,7 @@ include("config.php");
 <br>
 <center>
 
-<form action="<? echo $PHP_SELF ?>" method="post" name="form">
+<form action="<? echo $_SERVER['PHP_SELF'] ?>" method="post" name="form">
 <? hidden("ID",$ID); ?>
 <table width="95%" border="0" align="center" cellpadding="0" cellspacing="0">
   	<tr><td height="14"> 	    

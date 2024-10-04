@@ -1,6 +1,7 @@
 <? include("config.php");
    $TableName = GetVar("TableName");
-   
+   $FieldName = GetVar("FieldName");
+   $FormName = GetVar("FormName");
    // For security we validate the table and column we are browsing so as to prevent misuse.
    if (!stristr("Articles,Groups,Products,Types,Messages",$TableName)) {
    		echo "Error: Invalid argument $TableName";
@@ -30,7 +31,7 @@ function SelValue(V)
 	window.close();
 }
 </SCRIPT>
-<form name=form action="<? echo $PHP_SELF ?>" method="post">
+<form name=form action="<? echo $_SERVER['PHP_SELF'] ?>" method="post">
 <div align="center">
 		 <?
 			function fmtField($Data,$ID,$R="")

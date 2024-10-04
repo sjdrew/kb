@@ -20,7 +20,7 @@ function EditSection(s)
 }
 </script>
 <? include("header.php"); ?>
-<form name=form action="<? echo $PHP_SELF ?>" method="post">
+<form name=form action="<? echo $_SERVER['PHP_SELF'] ?>" method="post">
 <table width="100%" border=0 cellspacing=0 cellpadding=0><tr>
 <td width="25%" nowrap class="subhdr">
 <img src="images/page.gif" width="49" height="43">Customize Page Content<br>

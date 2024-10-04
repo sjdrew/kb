@@ -18,7 +18,7 @@ function ReadMap($enc)
 		if($l{0}=='!')
 		{
 			$e=preg_split('/[ \\t]+/',chop($l));
-			$cc=hexdec(substr($e[0],1));
+			$cc=hexdec(substr((string)$e[0],1));
 			$gn=$e[2];
 			$cc2gn[$cc]=$gn;
 		}
@@ -58,7 +58,7 @@ function ReadAFM($file,&$map)
 			$cc=(int)$e[1];
 			$w=$e[4];
 			$gn=$e[7];
-			if(substr($gn,-4)=='20AC')
+			if(substr((string)$gn,-4)=='20AC')
 				$gn='Euro';
 			if(isset($fix[$gn]))
 			{
@@ -228,7 +228,7 @@ function SaveToFile($file,$s,$mode='t')
 	$f=fopen($file,'w'.$mode);
 	if(!$f)
 		die('Can\'t write to file '.$file);
-	fwrite($f,$s,strlen($s));
+	fwrite($f,$s,strlen((string)$s));
 	fclose($f);
 }
 
@@ -314,7 +314,7 @@ function MakeFont($fontfile,$afmfile,$enc='cp1252',$patch=array(),$type='TrueTyp
 	//Find font type
 	if($fontfile)
 	{
-		$ext=strtolower(substr($fontfile,-3));
+		$ext=strtolower(substr((string)$fontfile,-3));
 		if($ext=='ttf')
 			$type='TrueType';
 		elseif($ext=='pfb')
@@ -366,7 +366,7 @@ function MakeFont($fontfile,$afmfile,$enc='cp1252',$patch=array(),$type='TrueTyp
 			if(!$pos)
 				die('<B>Error:</B> font file does not seem to be valid Type1');
 			$size2=$pos-$size1;
-			$file=substr($file,0,$size1+$size2);
+			$file=substr((string)$file,0,$size1+$size2);
 		}
 		if(function_exists('gzcompress'))
 		{

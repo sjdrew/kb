@@ -103,7 +103,7 @@ Then create the getpdf.php file with this:
 &lt;?php<BR>
 $f=$HTTP_GET_VARS['f'];<BR>
 //Check file (don't skip it!)<BR>
-if(substr($f,0,3)!='tmp' or strpos($f,'/') or strpos($f,'\\'))<BR>
+if(substr((string)$f,0,3)!='tmp' or strpos($f,'/') or strpos($f,'\\'))<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;die('Incorrect file name');<BR>
 if(!file_exists($f))<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;die('File does not exist');<BR>
@@ -152,7 +152,7 @@ function CleanFiles($dir)<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;$h=opendir($dir);<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;while($file=readdir($h))<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;{<BR>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if(substr($file,0,3)=='tmp' and substr($file,-4)=='.pdf')<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if(substr((string)$file,0,3)=='tmp' and substr((string)$file,-4)=='.pdf')<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$path=$dir.'/'.$file;<BR>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if($t-filemtime($path)&gt;3600)<BR>

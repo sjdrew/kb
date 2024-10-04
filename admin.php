@@ -1,6 +1,7 @@
 <?  
 	include("config.php");
 	RequirePriv(PRIV_APPROVER,"home.php");
+    $msg = GetVar('msg');
  ?>
 <html>
 
@@ -18,18 +19,13 @@
     <tr>
       <td height="14">
         <table width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
-          <tr>
-            <td width="22%">
-            <td width="78%" colspan="2">
-          <tr>
-            <td colspan="5"> </td>
-          </tr>
+
           <tr valign="middle">
-            <td width="180" valign="top" align="left" background="images/vert_bar.gif"> <img src="images/spacer.gif" width="180" height="1" border=0>
-              <table width="87%" border="0" cellpadding="4" cellspacing="0">
+            <td width="250" valign="top" align="left" > <img src="images/spacer.gif" width="180" height="1" border=0>
+              <table style='background-image:"images/vert_bar.gif";border-right:1px solid navy;' width="87%" border="0" cellpadding="4" cellspacing="0">
                 <tr>
                   <td align="center" width="36%" ><img src="images/desk.gif" width="32" height="32"></td>
-                  <td width="64%" align="center" valign="middle" class="hdr1">Administration</td>
+                  <td width="64%" align="left" valign="middle" class="hdr1">Administration</td>
                 </tr>
                 <tr>
                   <td colspan="2" class="dots">.....................................</td>
@@ -79,9 +75,11 @@
 					<div class="divIcon"><p><a href="admin_settings.php"><img src="images/settings.gif" width="42" height="48" border="0"><br>
                       Settings</a></p>
                     </div>
+                    <!--
                     <div class="divIcon"><p><a href="admin_update.php"><img title="You must have Admin rights on the Windows Server" src="images/updates.gif"  border="0"><br>
                       Check for Updates</a></p>
                     </div>
+                    !-->
                     <div class="divIcon"><p><a href="admin_fields.php"><img src="images/databases.gif" width="57" height="40" border="0"><br>
                       Manage Database Fields</a></p>
                     </div>

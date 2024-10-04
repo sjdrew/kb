@@ -28,7 +28,7 @@ function ProcessDelete($ID,&$msg)
 	global $AppDB;
 	global $Table;
 	
-	if ($_POST[Delete] && $ID) {
+	if ($_POST['Delete'] && $ID) {
 		$Rec = $AppDB->GetRecordFromQuery("select GroupID from Groups where ID='$ID'");
 		if ($Rec) {
 			$Chk = $AppDB->GetRecordFromQuery("select count(*) as N from Articles where STATUS='Active' 
@@ -49,7 +49,7 @@ function ProcessDelete($ID,&$msg)
 
 	
 	if ($Save) {
-		$ID = ProcessSave($ID,$rdonly,&$msg,&$Err);		
+		$ID = ProcessSave($ID,$rdonly,$msg,$Err);		
 	}
 		
 	if ($Delete && $ID) {
@@ -97,7 +97,7 @@ function ParseForm(f)
 }
 </script>
 <? include("header.php"); ?>
-<form onSubmit="ParseForm(this)" name=form action="<? echo $PHP_SELF ?>" method="post">
+<form onSubmit="ParseForm(this)" name=form action="<? echo $_SERVER['PHP_SELF'] ?>" method="post">
 <? hidden("ID",$ID); 
 ?>
 <table width="100%" border=0 cellspacing=0 cellpadding=0><tr>

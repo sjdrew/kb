@@ -1,5 +1,5 @@
 <? 
-if ($_GET['ID']) {
+if (!empty($_GET['ID'])) {
 	header('location:article.php?ID=' . $_GET['ID']);
 	exit;
 }
@@ -23,6 +23,12 @@ include("config.php");
 <? include("header.php"); ?>
 <?
 
+    $GroupID = GetVar('GroupID');
+    $SType = GetVar('SType');
+    $Type = GetVar('Type');
+    $Product = GetVar('Product');
+    $msg = GetVar('msg');
+
 	if (!$GroupID) {
 		$GroupID = $CUser->u->GroupID;
 	}
@@ -37,6 +43,7 @@ include("config.php");
 	$HideExpired = " and (Expires is NULL OR Expires >= GetDate()) ";
 	$DaysBack = $AppDB->Settings->HitsHistoryDays - 1;
 
+    $mrGroupFilter = '';
 	if ($CUser->u->GroupsMustRead) $mrGroupFilter = " AND Articles.GroupID in (" . $CUser->u->GroupsMustRead . ")";
 	$mrclause = " left join Hits on (Hits.CREATEDBY = '$CUser->UserID' AND Hits.ArticleID = Articles.ID " .
                 	"AND Hits.CREATED > Articles.ContentLastModified) " .
@@ -55,39 +62,25 @@ include("config.php");
 <script language="javascript">
 function onchangewhat()
 {
-	if (searchform.What.value == "Remedy Known Error") {
-		searchform.action="search_remedy_ke.php";
-	} else if (searchform.What.value == "Remedy HelpDesk") {
-		searchform.action="search_remedy.php";
-	} else if (searchform.What.value == "Office Products") {
-		searchform.action="search_office.php";
-	} else if (searchform.What.value == "Microsoft KB") {
-		searchform.action="search_mskb.php";
-	} else {
+
 		searchform.action="search.php";	
-	}
+
 }
 </script>
 <? ShowMsgBox($msg,"center"); if ($msg) echo "<br>"; ?>
 <table width="95%" border="0" align="center" cellpadding="0" cellspacing="0">
   	<tr><td height="14"> 	    
   	<table width="100%" border="0" align="center" cellpadding="0" cellspacing="0">
-    <tr> 
-      <td width="22%"> 
-      <td width="78%" colspan="2"> 
-    <tr> 
-      <td colspan="5"> </td>
-    </tr>
+
     <tr valign="middle">
-      <td width="185" valign="top" align="left" background="images/vert_bar.gif">
-	  <img src="images/spacer.gif" width="185" height="1" border=0>
-	  <table width="87%" border="0" cellpadding="4" cellspacing="0">
-          <tr><td width="39%" ><img src="images/compglobe.gif" width="53" height="53"></td>
-            <td width="61%" align="center" valign="middle" class="hdr1">Knowledge
+        <td valign="top" align="left" style="width:240px;border-right: solid 1px navy;padding-left:15px">
+          <table style="width:225px" border="0" cellpadding="4" cellspacing="0">
+          <tr><td  ><img src="images/compglobe.gif" width="53" height="53"></td>
+            <td  align="center" valign="middle" class="hdr1">Knowledge
               Base</td>
           </tr>
           <tr> 
-            <td colspan="2" class="dots">...............................................</td>
+              <td colspan="2" class="dots">...............................................................</td>
           </tr>
           <tr>
             <td nowrap colspan="2">
@@ -173,11 +166,7 @@ function onchangewhat()
 			
 			?></td>
           </tr>
-          <tr> 
-            <td colspan="2" class="dots" ><p>..............................................<br>
-              </p>
-              </td>
-          </tr>
+
           <tr>
             <td colspan="2" >
 			<? 
@@ -187,26 +176,24 @@ function onchangewhat()
           </tr>
        </table>
 	  </td>
-      <td colspan="2" valign="top">
+      <td colspan="2" valign="top" style="padding-left:20px;">
 			<? 
 				DisplayContentSection("HomePageTopCenter");
 			?>	   
 	      <table width="95%" border="0" align="center" cellpadding="5">
           <tr valign="middle"> 
-            <td style="padding-top:8px"width="11%" valign="top" class="subhdr"><strong>Search: </strong></td>
+            <td style="padding-top:8px" width="11%" valign="top" class="subhdr"><strong>Search: </strong></td>
             <td nowrap width="89%" class="subhdr"><form name="searchform" method="get" action="search.php"><input name="Search" type="text" size="60" maxlength="200">
             <input name="S" type="submit" value="Search"> <?
-			if ($Priv >= PRIV_SUPPORT) {
-				DisplaySearchModes("onchange='onchangewhat()' style='font-size:10px'");
-			}
+
 			?>
             <br>
             <span class="small">Search by:
-			<input name="SType" <? if ($SType != "Strict" && $SType != "Title") echo checked ?> type="radio" value="English">
+			<input name="SType" <? if ($SType != "Strict" && $SType != "Title") echo 'checked' ?> type="radio" value="English">
 			English query,
-            <input name="SType" <? if ($SType == "Strict") echo checked ?> type="radio" value="Strict">
+            <input name="SType" <? if ($SType == "Strict") echo 'checked' ?> type="radio" value="Strict">
 			Strict, match all words and quoted phrases
-            <input name="SType" <? if ($SType == "Title") echo checked ?> type="radio" value="Title">
+            <input name="SType" <? if ($SType == "Title") echo 'checked' ?> type="radio" value="Title">
 			-or- Title only.</span>
 
 			<? if ($AppDB->Settings->FiltersOnHomePage) { ?>
@@ -223,7 +210,9 @@ function onchangewhat()
                   <td class="form-data"><? DBField("Articles","Type_S",$Type); ?>
                   </td>
                   <td align="right" class="form-hdr">Product:</td>
-                  <td class="form-data"><? DBField("Articles","Product_S",$Product); PopupFieldValues("Articles","searchform","Product"); ?>
+                  <td class="form-data"><? DBField("Articles","Product_S",$Product); 
+                  //PopupFieldValues("Articles","searchform","Product");
+                  ?>
                 </td>	
 			</tr>	
 			</table>
@@ -305,7 +294,7 @@ function fmt_bb_icon($str,$ID,$R)
 }
 	// ----------------------- Bulletins -----------------------------------
 	$BBQuery = MessageQuery("",0,1);
-	$Fields = "";	
+	$Fields = [];	
 	$Fields[" "] = "@fmt_bb_icon";
 	$Fields["Subject"] = "75%@fmt_btitle";
 	$Fields["Type"] = ":nowrap";
@@ -329,56 +318,10 @@ function fmt_bb_icon($str,$ID,$R)
 
 <? } 
 
-/*
- * Remedy Known Errors
- */
-if ($AppDB->Settings->RemedyARServer && $Priv >= PRIV_SUPPORT) {
-?>
- <fieldset>
-    <legend> Recent Known Errors </legend>
-<?
-	$KEQuery = "select top 30 Known_Error_ID as ID,Product_Name as Product ,Detailed_Decription as Notes,
-			First_Reported_On, Searchable,Category,Assigned_Group,
-			Description as Summary 
-			from PBM_Known_Error 
-			where Searchable = 0 and Known_Error_Status < 4
-			";
-		
-	$RemDB = OpenRemedyDB();
-	
-	if (!$RemDB) {
-		echo "Remedy currently unavailable.";
-		exit;
-	}
-	
-	// ----------------------- Bulletins -----------------------------------
-	unset($Fields);	
-	$Sort = '';
-	$Fields["Summary"] = "";
-//	$Fields["ID"] = "";
-	$Fields["Product"] = "";
-	$Fields["Assigned_Group:Group"] = ":nowrap";	
-	//$Fields["Date"] = "75@DateStr:nowrap";
-	$LB5 = new ListBox("",$RemDB,$KEQuery,$Fields,"","/Reports/Case.php",'',1,"90%");
-	$LB5->NoFrame = 1;
-	$LB5->ScrollAfterRows = 5;
-	$LB5->NoTopStats = 1;
-	$LB5->CellStyle = "list-sm";
-	$LB5->Style = $ListPadding;
-	$LB5->Form = 1;
-	$LB5->sortable = 1;
-	$LB5->Sort="First_Reported_On desc";
-	$LB5->Display();
-	?>
- </fieldset>
-<br>
-<? }  // End Known Errors
-
-
 	//
 	// Must Read Section -----------------------------------------------------------------
 	//
-	$DBFields = "";
+	$DBFields = [];
 	$DBFields["Title"] = "@fmt_title2";
 	$DBFields["Product"] = " ";	
 	$DBFields["GroupName:Group"] = ":nowrap";	
@@ -421,7 +364,7 @@ if ($AppDB->count_of($query)) {
 	<?
 	$ShowGroups = 1;
 	
-	$DBFields = "";
+	$DBFields = [];
 	$DBFields["Title"] = "@fmt_title";
 	$DBFields["Product"] = " ";	
 	if ($ShowGroups) {
@@ -458,7 +401,7 @@ if ($AppDB->count_of($query)) {
 	
 	// ----------------- Most Viewed Articles ---------------------------
 	
-	$DBFields = "";
+	$DBFields = [];
 	$DBFields["Title"] = "@fmt_title";
 	$DBFields["Product"] = " ";
 	if ($ShowGroups) {

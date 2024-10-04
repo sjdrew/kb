@@ -24,7 +24,7 @@ function DisplayList($Table)
 {
 
 	$Singular = $Table;
-	if (substr($Table,strlen($Table)-1,1) == "s") $Singular = substr($Table,0,strlen($Table) - 1);
+	if (substr((string)$Table,strlen((string)$Table)-1,1) == "s") $Singular = substr((string)$Table,0,strlen((string)$Table) - 1);
 	
 	$Fields["Name"] = " ";
 	$Fields["STATUS"] = " ";
@@ -36,7 +36,7 @@ function DisplayList($Table)
 	
 	ob_start();
 	
-	$Custom1Label = (trim($AppDB->Settings->Custom1Label) != "") ? $AppDB->Settings->Custom1Label : "Custom1";
+	$Custom1Label = (trim((string)$AppDB->Settings->Custom1Label) != "") ? $AppDB->Settings->Custom1Label : "Custom1";
 	$TablesTxt = array($Custom1Label,"Types");
 	$Tables = array("Custom1","Types");
 	dropdownlist("Type",$TablesTxt,$Tables,$Table,"onchange='F_LT1.submit()'");

@@ -1,5 +1,0 @@
-<?
-
-echo realpath("../../../../../../config.php");
-
-?>

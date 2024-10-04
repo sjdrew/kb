@@ -18,7 +18,7 @@ if ($Next) {
 	header("location: " . $SITE_URL . "admin_settings.php");
 	exit;
 }
-$_app_path = substr($_SERVER["SCRIPT_FILENAME"],0,strrpos($_SERVER["SCRIPT_FILENAME"],"\\")+1);
+$_app_path = substr((string)$_SERVER["SCRIPT_FILENAME"],0,strrpos($_SERVER["SCRIPT_FILENAME"],"\\")+1);
 $_app_path = str_replace("\\\\","\\",$_app_path);
 DEFINE("INSTALL_FOLDER","$_app_path");
 
@@ -63,7 +63,7 @@ function _scandir($dir = '.')
 	*/
 ?>
 <center>
-<form action="<? echo $PHP_SELF ?>" method="post" name="form" id="form">
+<form action="<? echo $_SERVER['PHP_SELF'] ?>" method="post" name="form" id="form">
 <? 
 $Done = 0;
 
@@ -105,7 +105,7 @@ function InstallScript($lnk)
 		$files = _scandir();
 		foreach($files as $file) {
 			
-			if (substr($file,0,7) == "update_" && stristr($file,".sql")) {
+			if (substr((string)$file,0,7) == "update_" && stristr($file,".sql")) {
 				$script = file_get_contents($file);
 				$rs = sqlsrv_query($lnk,$script);
 				if (CheckError()) {
@@ -141,7 +141,7 @@ else {
 		$line = fgets($fp);
 		// expect Instance= NAME
 		list($garb,$param) = explode("=",$line);
-		$param=trim($param); // DB@SERVER\INSTANCE
+		$param=trim((string)$param); // DB@SERVER\INSTANCE
 		list($DBNAME,$DBHOST) = explode('@',$param);
 		if ($DBHOST == "") $DBHOST = "localhost";
 		fclose($fp);

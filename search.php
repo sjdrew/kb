@@ -23,6 +23,17 @@
  
  include("config.php"); 
 
+    $GroupID = GetVar('GroupID');
+    $What = GetVar('What');
+    $Search = GetVar('Search');
+    $Advanced = GetVar('Advanced');
+    $ChildList = GetVar('ChildList');
+    $Type = GetVar('Type');
+    $Product = GetVar('Product');
+    $MustRead = GetVar('MustRead');
+    $SType = GetVar('SType');
+    $ns = '';
+
 	if (!$GroupID) {
 		$GroupID = $CUser->u->GroupID;
 	}
@@ -36,14 +47,6 @@
 	
 	$form_action = "search.php";
 	
-	if ($What == "Remedy HelpDesk") {
-		header("location:search_remedy.php?ns=1&Search=$Search&SType=$SType&Advanced=$Advanced");
-	}
-	if ($What == "Office Products") {
-		$Advanced = 0;
-		$form_action = "search_office.php";
-	}
-	
 	if ($What == "") $What = "KB";
 	if ($Search == '""') $Search = "";
 	if ($Search == "''") $Search = "";
@@ -55,61 +58,47 @@
 <head>
 <title><? echo $AppDB->Settings->AppName ?> - Search results</title>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-<link REL="stylesheet" HREF="styles.css">
-</link>
+<link REL="stylesheet" HREF="styles.css"/>
 </head>
 <body onLoad="onPageLoad()">
 <SCRIPT LANGUAGE="JavaScript" SRC="lib/misc.js"></SCRIPT>
 <script language="javascript">
 function onPageLoad()
 {
-	<? if (!$_GET['ChildList']) { ?> if (FindElement('Search')) FindElement('Search').focus(); <? } ?>
+	<? if (!$ChildList) { ?> if (FindElement('Search')) FindElement('Search').focus(); <? } ?>
 }
 function onchangewhat()
 {
-	if (searchform.What.value == "Remedy HelpDesk") {
-		searchform.action="search_remedy.php";
-	} else if (searchform.What.value == "Remedy Known Error") {
-		searchform.action="search_remedy_ke.php";
-	} else if (searchform.What.value == "Office Products") {
-		searchform.action="search_office.php";
-	} else if (searchform.What.value == "Microsoft KB") {
-		searchform.action="search_mskb.php";
-	} else {
-		searchform.action="search.php";	
-	}
+    searchform.action="search.php";	
 }
 </script>
 <? include("header.php"); ?>
 <table width="98%" border="0" align="center" cellpadding="4">
   <tr>
     <td colspan="2">
-  <? if (!$_GET['ChildList']) { ?>
+  <? if (!$ChildList) { ?>
   <tr valign="middle">
     <td width="8%" valign="top" align="left"><p class="subhdr">Search:</p></td>
     <td width="92%"><p>
       <form id="searchform" name="searchform" method="get" action="<? echo $form_action ?>">
 	  	<? hidden("Advanced",$Advanced); ?>
-        <input name="Search" type="text" size="70" maxlength="200" value="<? echo htmlspecialchars(GetVar("Search"))?>" >
+        <input name="Search" type="text" size="70" maxlength="200" value="<? echo htmlspecialchars((string)GetVar("Search"))?>" >
         <input name="S" type="submit" value="Search"> <?
 			$Priv = $CUser->u->Priv;
-			if ($Priv >= PRIV_SUPPORT) {		 
-				DisplaySearchModes(); 
-			}
 			?>
             <br>
 			
             <span class="small">Search by: 
-			<input name="SType" <? if ($SType == "" || $SType == "English") echo checked ?> type="radio" value="English">
+			<input name="SType" <? if ($SType == "" || $SType == "English") echo 'checked' ?> type="radio" value="English">
 			English query,
-            <input name="SType" <? if ($SType == "Strict") echo checked ?> type="radio" value="Strict">
+            <input name="SType" <? if ($SType == "Strict") echo 'checked' ?> type="radio" value="Strict">
 			Strict, match all words and quoted phrases
-            <input name="SType" <? if ($SType == "Title") echo checked ?> type="radio" value="Title">
+            <input name="SType" <? if ($SType == "Title") echo 'checked' ?> type="radio" value="Title">
 			-or- Title only.</span>
 			
 			<? if ($Advanced) { ?>
 			<br>
-			 <fieldset style="padding-top:8px; width:300px">
+			 <fieldset style="margin-top:15px;padding-top:8px; width:300px">
 			    <legend> Advanced Filters: </legend>
 			<table style="margin:10px">
 			 <tr>
@@ -120,7 +109,9 @@ function onchangewhat()
                   <td class="form-data"><? DBField("Articles","Type_S",$Type); ?>
                   </td>
                   <td align="right" class="form-hdr">Product:</td>
-                  <td class="form-data"><? DBField("Articles","Product_S",$Product); PopupFieldValues("Articles","searchform","Product"); ?>
+                  <td class="form-data"><? DBField("Articles","Product_S",$Product); 
+                  // PopupFieldValues("Articles","searchform","Product"); 
+                  ?>
                 </td>	
 			</tr>	
 			</table>
@@ -133,7 +124,7 @@ function onchangewhat()
   </tr>
   <? } ?>
   <tr >
-    <td valign="top" colspan="2"><hr>
+    <td valign="top" style="padding-left:20px;padding-top:10px;" colspan="2"><hr>
    <?
 	global $Previews;
 	$Previews = ($CUser->u->Previews != "No") ? 1 : 0;
@@ -145,18 +136,18 @@ function fmt_Preview($Text,$ID='')
 	// Fix for word imported docs
 	// If there is a style block in the first section (within 800 bytes returned by search query)
 	// then obtain the full article content and set Text preview text to end of Style block
-	if ($ID && stristr($Text,"<style")) {
+	if ($ID && stristr((string)$Text,"<style")) {
 		global $AppDB;
 		$KB = $AppDB->GetRecordFromQuery("select Content from Articles where ID=$ID");
 		if ($KB) {
 			$P = stristr($KB->Content,"</style");
 			if ($P) {
-				$Text = substr($P,8,1000);
+				$Text = substr((string)$P,8,1000);
 				$force = 1;
 			}
 		}
 	}
-	$text = substr(htmltotext($Text,$force),0,300); 
+	$text = substr(htmltotext((string)$Text,$force),0,300); 
 	if ($text) $text .= "...";
 	return $text;
 }
@@ -165,18 +156,19 @@ function fmt_Title($Title,$ID,$R)
 {
 	global $Previews;
 	$t = "";
-	if ($_GET['ChildList']) $target = " target=_KBWin ";
+    $target = '';
+	if (GetVar('ChildList')) $target = " target=_KBWin ";
 	$Title = TitleFormat($Title,$R['ViewableBy']);
 	
 //	if ( $R[MatchType] === 0 || $R["AsContent"]) { // matched on base article or is AsContent
-	if ( $R[AttachmentID] == 0 || $R["AsContent"]) { // matched on base article or is AsContent
+	if ( $R['AttachmentID'] == 0 || $R["AsContent"]) { // matched on base article or is AsContent
 		if ($Previews) {
 			$t =  "<p class=RPreview><a href=\"article.php?ID=$ID\" $target>" . $Title . "</a></p>";
-			$preview = fmt_Preview($R[Content],$ID);
+			$preview = fmt_Preview($R['Content'],$ID);
 			if ($preview) {
 				$t .= "<p class=RPreview>" . $preview; // . "</p>"; 
-				if ($R["AsContent"] == 0 && trim($R["Filename"])) {
-					$t .= ' also see attachment: ' . GetAttachmentIcon($R[Filename]) . " <a title=\"View attachment\" $target href=\"show_attachment.php?ID=" . $R[AttachmentID] . "\">" . $R[Filename] . "</a>";
+				if ($R["AsContent"] == 0 && trim((string)$R["Filename"])) {
+					$t .= ' also see attachment: ' . GetAttachmentIcon($R['Filename']) . " <a title=\"View attachment\" $target href=\"show_attachment.php?ID=" . $R['AttachmentID'] . "\">" . $R['Filename'] . "</a>";
 				}
 				echo "</p>";			
 			}
@@ -186,12 +178,12 @@ function fmt_Title($Title,$ID,$R)
 		}
 	} else {
 		if ($Previews) {
-			$t = '<p class=RTitle>' . GetAttachmentIcon($R[Filename]) . " <a title=\"View attachment\" $target href=\"show_attachment.php?ID=" . $R[AttachmentID] . "\">" . $R[Filename] . "</a></p>";
+			$t = '<p class=RTitle>' . GetAttachmentIcon($R['Filename']) . " <a title=\"View attachment\" $target href=\"show_attachment.php?ID=" . $R['AttachmentID'] . "\">" . $R['Filename'] . "</a></p>";
 			$t .= "<p class=RPreview>Attachment is part of article: <a title=\"View Article\" $target href=\"article.php?ID=$ID\"><b>$Title</b></a></p>"; //<hr>" ;		
 		}
 		else {
-			$t = GetAttachmentIcon($R[Filename]) . " <a title=\"View attachment\" $target href=\"show_attachment.php?ID=" . $R[AttachmentID] . "\">" . $R[Filename] . "</a>";
-			$t .= " <b>From Article:</b> <a title=\"View Article\" $target href=\"article.php?ID=$ID\"><b>" . substr($Title,0,45) . "...</b>";					
+			$t = GetAttachmentIcon($R['Filename']) . " <a title=\"View attachment\" $target href=\"show_attachment.php?ID=" . $R['AttachmentID'] . "\">" . $R['Filename'] . "</a>";
+			$t .= " <b>From Article:</b> <a title=\"View Article\" $target href=\"article.php?ID=$ID\"><b>" . substr((string)$Title,0,45) . "...</b>";					
 		}
 	}
 	return $t;
@@ -199,16 +191,17 @@ function fmt_Title($Title,$ID,$R)
 
 function fmt_Prod($Prod)
 {
-	if ($_GET['ChildList']) $target = " target=_KBWin ";
+    $target = '';
+	if (isset($_GET['ChildList'])) $target = " target=_KBWin ";
 	if ($Prod) {
 		$url = "search.php?Advanced=1&Search=&S=Search&What=KB&Product=" . urlencode($Prod);
 		return "<a href=\"$url\" $target title=\"View all Articles for this product\">$Prod</a>";
 	} else return "&nbsp;";
 }
 
-	$Product = trim($Product);
-	$Type = trim($Type);
-	$GroupID = trim($GroupID);
+	$Product = trim((string)$Product);
+	$Type = trim((string)$Type);
+	$GroupID = trim((string)$GroupID);
 	if ($GroupID < 1 || $GroupID == 0) $GroupID = "";
 		
 	if (!$ns && ($MustRead || $Search || $GroupID || $Type || $Product)) { 
@@ -220,22 +213,22 @@ function fmt_Prod($Prod)
 		$q = " where Articles.STATUS = 'Active' and (Expires is NULL OR Expires >= GetDate() ) ";
 		$q .= PrivFilter();
 
-		if (trim($GroupID)) {
+		if (trim((string)$GroupID)) {
 			$q .= " and Articles.GroupID = '$GroupID'";
 		}
-		if (trim($Product)) {
-			$Product = trim($Product);
+		if (trim((string)$Product)) {
+			$Product = trim((string)$Product);
 			$q .= " and Product like '%$Product%'";
 		}		
-		if (trim($Type)) {
+		if (trim((string)$Type)) {
 			$q .= " and Type = '$Type'";
 		}
-		if (trim($MustRead)) {
+		if (trim((string)$MustRead)) {
 			$q .= " and MustRead = 'Yes'";
 			if ($CUser->u->GroupsMustRead) $q .= " AND Articles.GroupID in (" . $CUser->u->GroupsMustRead . ")";
 		}
-		if ($SType == "Title" && trim($Search)) {
-			$Title = trim($Search);
+		if ($SType == "Title" && trim((string)$Search)) {
+			$Title = trim((string)$Search);
 
 			if ($Title) {
 				$qtxt .= "$and with Title containing '$Title'";
@@ -259,7 +252,7 @@ function fmt_Prod($Prod)
 			}
 			else {
 				$SMethod = "FREETEXTTABLE";
-				$Search_s = str_replace("'","",$Search); //$AppDB->qstr(trim($Search));
+				$Search_s = str_replace("'","",$Search); //$AppDB->qstr(trim((string)$Search));
 			}
 			if ($Search_s != "" && $Search_s != "''") {
 			   	$query = BuildSearchQuery($Search_s,$q,$SMethod);
@@ -279,7 +272,7 @@ function fmt_Prod($Prod)
 		}
 		
 							
-		if ($ShowQuery) echo $query;
+		if (GetVar('ShowQuery')) echo $query;
 		
 		if ($query) { 
 		$DBFields["Title"] = "@fmt_Title";
@@ -301,17 +294,10 @@ function fmt_Prod($Prod)
 			$Search = urlencode($Search);
 			?>
 			
-			<b><br><hr>
-			</b>
+			<br><hr>
+			
 	  <p><b>No articles found.</b></p>
 			<ul>
-			  <? if ($AppDB->Settings->RemedyARServer) { ?>
-			  <li style="font-size: 13px" ><b><a href="search_remedy.php?Search=<? echo "$Search&SType=$SType&What=Remedy&Product=$Product" ?>">Click here</a>
-		      to try the search against Remedy Help Desk Tickets.</b> </li>
-			  <? } ?>
-              <!--
-              <li><b><a href="search_office.php?Search=<? echo "$Search&SType=$SType&Product=$Product" ?>"><strong>Click here</strong></a>
-		           to search Microsoft Office Online Assitance and Training articles.</b> (if your search is related to Microsoft Office Products) !-->
 	        <? 
 			if ($kbn > 0 && $kbn < 1000000) {
 				echo "<br><br><i>Note: If you meant to find an article by that number, prefix the number with 'KB'</i>";
@@ -319,7 +305,7 @@ function fmt_Prod($Prod)
 		}
 		
 		// Save the query except for Admins if set
-		if ($Search && $_GET["Page"] == "" && (!$CUser->IsPriv(PRIV_ADMIN) || !$AppDB->Settings->DontLogAdmin) ) {
+		if ($Search && empty($_GET['Page']) && (!$CUser->IsPriv(PRIV_ADMIN) || !$AppDB->Settings->DontLogAdmin) ) {
 			$Search = str_replace('\\\\',"",$Search);
 			$Search = $AppDB->qstr($Search);
 			// If this search is the same as one of this users searches in the past hour then don't bother saving it

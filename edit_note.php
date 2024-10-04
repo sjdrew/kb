@@ -2,6 +2,16 @@
 	include("config.php"); 
 	$ID = GetVar("ID");
 	
+    $Save = GetVar('Save');
+    $NID = GetVar('NID');
+    $Abort = GetVar('Abort');
+    $msg = '';
+    $KeyField = GetVar('KeyField');
+    $NoteType = GetVar('NoteType');
+    $T = GetVar('T');
+    $Note = GetVar('Note');
+    $EmailNote = GetVar('EmailNote');
+    
 	if ($Save == "Save") {
 		$F["$KeyField"] = $ID;
 		$F["NoteType"] = $NoteType;
@@ -15,7 +25,7 @@
 		    $AppDB->update_record($NID,$T,$F);
 			AuditTrail("EditNote",array('ID' => $ID));
 		}
-		if ($EmailNote && $NID && ID) {
+		if ($EmailNote && $NID && $ID) {
 			$msg = SendNoteToContacts($ID,$NID);
 		}
 	}
@@ -67,7 +77,7 @@ function init()
 
 </script>
 
-<form name="form" enctype="multipart/form-data" action="<?  echo $PHP_SELF ?>" method="post">
+<form name="form" enctype="multipart/form-data" action="<?  echo $_SERVER['PHP_SELF'] ?>" method="post">
 <? 
 	hidden("ID",$ID);
 	hidden("NID",$NID);

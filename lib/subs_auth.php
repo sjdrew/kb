@@ -51,13 +51,16 @@ class CurrentUser {
 	var $Simulated;
 	var $AuthenticationMode; 
 	var $AllowGuests = ALLOW_GUESTS;
+    var $PrivWrite;
+    var $NTDomain;
+    var $AutoLogin;
 	var $AutoCreateUserCallBack; // function to call after creating skeleton User record after NT Authentication.
 	
-	function CurrentUser($SimulateID = "",$CustomCreateUserCallBack = "") 
+	function __construct($SimulateID = "",$CustomCreateUserCallBack = "") 
 	{
 		global $noauth;
 		global $AppDB;
-		
+
 		$this->AuthenticationMode = $AppDB->Settings->AuthenticationMode; // NT or Local
 		
 		// For security, in case php register globals is enabled
@@ -67,6 +70,8 @@ class CurrentUser {
 		}
 		$this->AutoCreateUserCallBack = $CustomCreateUserCallBack;
 		
+        $this->u = new stdClass();
+        
 		if ($SimulateID) {
 			$this->u = GetUser("",$SimulateID);
 			$this->LoggedIn = true;
@@ -80,7 +85,7 @@ class CurrentUser {
 			if ($this->LoggedIn) {	
 				$this->u = GetUser($this->UserID);
 			}
-			if ($this->u->LastName == "" && $this->u->FirstName == "") 
+			if (empty($this->u->LastName) && empty($this->u->FirstName)) 
 				$this->u->LastName = $this->UserID;
 		}
 		if ($AppDB->Settings->PrivMode == "Group") {
@@ -91,7 +96,7 @@ class CurrentUser {
 			$GroupsMustRead = array();
 			foreach($Groups as $Grp) {
 				$MustRead = "N";
-				list($GID,$Mode,$MustRead) = explode(":",$Grp);
+				@list($GID,$Mode,$MustRead) = explode(":",$Grp);
 				$GroupIDs[] = $GID;
 				if ($MustRead == "Y") $GroupsMustRead[] = $GID;
 				if ($GID == 1) $this->u->Priv = PRIV_ADMIN;
@@ -186,7 +191,7 @@ class CurrentUser {
 		}
 		
 		// else route to Logon Page 
-		$target = urlencode($_SERVER[URL]);
+		$target = urlencode($_SERVER['URL']);
 		header ("Location: logon.php?target=$target");
 		exit;
 	}
@@ -202,7 +207,7 @@ class CurrentUser {
  		   else { 
    
       if (strstr($auth, "NTLM")) {
-        $msg = base64_decode(substr($auth, 5));
+        $msg = base64_decode(substr((string)$auth, 5));
         if (ord($msg[8]) == 1) { // First step of authentication
           $off = 18;
           header('HTTP/1.0 401 Unauthorized');
@@ -213,7 +218,7 @@ class CurrentUser {
           $off = 30;
           $length = ord($msg[$off + 17]) * 256 + ord($msg[$off + 16]);
           $offset = ord($msg[$off + 19]) * 256 + ord($msg[$off + 18]);
-          $s = substr($msg, $offset, $length);
+          $s = substr((string)$msg, $offset, $length);
         }
         else {
           header('HTTP/1.0 401 Unauthorized');
@@ -225,17 +230,17 @@ class CurrentUser {
 
         $length = ord($msg[$off + 1]) * 256 + ord($msg[$off]);
         $offset = ord($msg[$off + 3]) * 256 + ord($msg[$off + 2]);
-        $results["domain"] = str_replace(chr(0), "", substr($msg, $offset, $length));
+        $results["domain"] = str_replace(chr(0), "", substr((string)$msg, $offset, $length));
 
         $length = ord($msg[$off + 9]) * 256 + ord($msg[$off + 8]);
         $offset = ord($msg[$off + 11]) * 256 + ord($msg[$off + 10]);
-        $results["login"] = str_replace(chr(0), "", substr($msg, $offset, $length));
+        $results["login"] = str_replace(chr(0), "", substr((string)$msg, $offset, $length));
 
         $length = ord($msg[$off + 17]) * 256 + ord($msg[$off + 16]);
         $offset = ord($msg[$off + 19]) * 256 + ord($msg[$off + 18]);
-        $results["host"] = str_replace(chr(0), "", substr($msg, $offset, $length));
+        $results["host"] = str_replace(chr(0), "", substr((string)$msg, $offset, $length));
 
-  	      $this->UserID = strtolower($results['login']);
+  	    $this->UserID = strtolower($results['login']);
 		$this->NTDomain = strtolower($results['domain']);
 		return $this->UserID;
 
@@ -257,7 +262,7 @@ class CurrentUser {
 		}
  		if ($_SERVER["AUTH_TYPE"] && stristr("Negotiate|NTLM|Basic",$_SERVER["AUTH_TYPE"])) {
 
-			list($domain,$account) = split('\\\\',$_SERVER['LOGON_USER']);
+			list($domain,$account) = explode('\\\\',$_SERVER['LOGON_USER']);
 			if ($account == "") $account = $domain;
 		
 			if ($account == "") {
@@ -301,7 +306,7 @@ class CurrentUser {
 			$ID = $AppDB->sql("insert into " . USERS_TABLE . " (LastName,FirstName,Username,Priv) values ('$user','$user','$user',".PRIV_GUEST.")");
 			$this->u = GetUser($this->UserID);
 		}
-		/* now called on each login to allow callback to update KB user profile from external source (ie remedy)
+		/* now called on each login to allow callback to update KB user profile from external source 
 		 */
 		if ($this->u && $this->AutoCreateUserCallBack) {
 			$cb = $this->AutoCreateUserCallBack;
@@ -394,7 +399,8 @@ class CurrentUser {
 	function SetLastLogin()
 	{
 		global $AppDB;
-	
+        $SETS = '';
+
 		if ($AppDB->UseGMT) {
 			$SETS .= 'LastLogin=' . $AppDB->OffsetDate(SERVER_GMT_OFFSET,"GetDate()");
 		}
@@ -438,6 +444,7 @@ function GetUser($user,$ID="")
 		exit;
 	}
 	if ($user == "system" && $noauth)  {
+        $u = (object)[];
 		$u->ID = 0;
 		$u->FirstName = "System";
 		$u->LastName = " ";
@@ -537,6 +544,8 @@ function GroupArrayToStr($Groups,$NewID,$NewMode,$Delete = 0)
 	if ($NewID && $Delete == 0 && $found == 0) {
 		$NewGroups[$NewID] = $NewMode;
 	}
+    $NewGroupsStr = '';
+    $comma = '';
 	foreach($NewGroups as $GroupID => $Mode) {
 		$NewGroupsStr .= $comma . $GroupID . ":" . $Mode;
 		$comma = ",";

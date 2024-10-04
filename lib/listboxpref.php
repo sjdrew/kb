@@ -16,10 +16,10 @@
 	
 class ListBoxPref extends ListBox
 {
-	function ListBoxPref($title,$db,$q,$Fields,$Sort="",$ModifyPage="",$subtitle="",$sortable=0,$width='90%',
+	function __construct($title,$db,$q,$Fields,$Sort="",$ModifyPage="",$subtitle="",$sortable=0,$width='90%',
                  $hlp="",$SumFlds="",$Style="",$CellStyle="list",$limit="") 
 	{
-		parent::ListBox($title,$db,$q,$Fields,$Sort,$ModifyPage,$subtitle,$sortable,$width,
+		parent::__construct($title,$db,$q,$Fields,$Sort,$ModifyPage,$subtitle,$sortable,$width,
                  $hlp,$SumFlds,$Style,$CellStyle,$limit);
 		global $CUser;
 		if ($CUser->u->Pagination) $this->PageSize = $CUser->u->Pagination;

@@ -20,7 +20,7 @@
 ShowMsgBox($msg,"center");
 $Table = USERS_TABLE;
 
-if ($_GET[Back]) $Search = "";
+if (GetVar('Back')) $Search = "";
 
 
 function fmt_grouplist($GrpStr) {
@@ -30,6 +30,8 @@ function fmt_grouplist($GrpStr) {
 	if (!is_array($GroupNames)) {
 		$GroupNames = $AppDB->MakeArrayFromQuery("select GroupID as ID,Name as ITEM from Groups");
 	}
+    $UsersGroups = '';
+    $comma = '';
 	$List = GroupStrToArray($GrpStr);
 	if (is_array($List)) {
 		foreach($List as $GroupID => $Perm) {
@@ -47,15 +49,15 @@ if ($Search) {
 	
 	$q = 'Select * from ' . $Table . " where 1=1 ";
 
-	if (trim($Name)) {
+	if (trim((string)$Name)) {
 		$q .= " and (FirstName + ' ' + LastName) like '%$Name%'";
 	}
 
-	if (trim($UserID)) {
+	if (trim((string)$UserID)) {
 		$q .= " and Username like '%$UserID%'";
 	}
 
-	if (trim($GroupID) && $GroupID > 0) {
+	if (trim((string)$GroupID) && $GroupID > 0) {
 		$q .= " and ($Table.Groups like '$GroupID:%' OR $Table.Groups like '%,$GroupID:%') ";
 	}
 	
@@ -81,11 +83,11 @@ if ($Search) {
 	$LB->Form=1;
 	$LB->Display();
 ?> 
-<table border="0" cellspacing="0" cellpadding="8" width="90%"><tr><td align="left"><button onClick="window.location='admin_users.php?Back=1&<? echo $_SERVER[QUERY_STRING] ?>'">Back</button></td></tr></table>
+<table border="0" cellspacing="0" cellpadding="8" width="90%"><tr><td align="left"><button onClick="window.location='admin_users.php?Back=1&<? echo $_SERVER['QUERY_STRING'] ?>'">Back</button></td></tr></table>
 <?
 } else {
 ?>
-<form method="Get" name="form" onsubmit='this.Search.value=1;this.submit();' Action="<? echo $PHP_SELF ?>">
+<form method="Get" name="form" onsubmit='this.Search.value=1;this.submit();' Action="<? echo $_SERVER['PHP_SELF'] ?>">
 	<? hidden("Search",""); ?>
 	 <div class="shadowboxfloat">
           <div class="shadowcontent">

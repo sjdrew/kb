@@ -9,7 +9,7 @@ function SetContentSection2($SectionName,$Content)
 	if ($S) {
 		$AppDB->sql("update ContentSections set LASTMODIFIEDBY='$CUser->UserID',LASTMODIFIED=$AppDB->sysTimeStamp, Content=".$AppDB->qstr($Content)." where SectionName='$SectionName'");
 	} else {
-		$AppDB->insert_record("ContentSections",$SETS);
+		//$AppDB->insert_record("ContentSections",$SETS);
 	}
 }
 
@@ -31,7 +31,7 @@ function SetContentSection2($SectionName,$Content)
 <script language="javascript">window.close()</script>
 <? exit; } ?>
 <body onLoad="AutoSizeWindow()">
-<form action="<? echo $PHP_SELF?>" method="post" name="form">
+<form action="<? echo $_SERVER['PHP_SELF']?>" method="post" name="form">
 <? hidden("SectionName",$SectionName); ?>
 <table cellspacing="0" cellpadding="0" width="100%" border="0">
 	<tr>

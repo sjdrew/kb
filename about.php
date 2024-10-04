@@ -22,9 +22,7 @@
          <br>
         <span style="color:#555">by SoftPerfection.com</span>
         </p>
-		<? if ($AppDB->Settings->RemedyARServer) { ?>
-        <p><em><strong>with Remedy Integration.</strong></em></p>
-		<? } ?>
+		
        
 		<? if (!$ShowUpdates) { ?>
         <p><a href="about.php?ShowUpdates=1">Display Update History</a> </p>

@@ -3,6 +3,9 @@
 	RequirePriv(PRIV_ADMIN);
 	$ID = GetVar("ID");
 	if ($ID == "") { header("location: admin_reports.php"); exit; }
+    
+    $msg = GetVar('msg');
+    
  ?>
 <html>
 
@@ -17,9 +20,6 @@
   <?  ShowMsgBox($msg); 
   	$DefRange = "5";
  
- 	if ($AppDB->Settings->RemedyARServer) { 
-		$RemDB = OpenRemedyDB();
-	}
   
   // Here passed user id of Search
   $SearchRec = $AppDB->GetRecordFromQuery("Select * from Searches where ID=$ID");
@@ -144,50 +144,6 @@
     <tr>
       <td align="right">&nbsp;</td>
       <td height="14" colspan="2">
-	 <?
-	  
-	 if ($RemDB) {
-
-function fmt_case($Case,$ID,$R) 
-{
-	$t =  "<a title=\"click to view in Remedy\" href=\"OpenTicket.php?Server=" . REMEDY_SERVER . "&ID=$ID\">" . $Case . "</a>";		
-	return $t;
-}
-
-			// Search, Type, Matches, Articles Read
-			unset($Fields);
-			$Fields["CaseID:Case"] = "@fmt_case";
-			$Fields["Group_:Group"] = "";
-			$Fields["Summary"] = "";
-			
-			$GMTOFFSET = 7;
-			
-			if (REMEDY_VERSION == 7) {
-				$TimeCalc = "(cast ('Jan 1 1970' as datetime) + ((((Reported_Date / 60.0) / 60.0) - $GMTOFFSET ) /24.0)) ";
-				$q = "select Entry_ID as ID,Incident_Number as CaseID,Description as Summary,$TimeCalc as Date, 
-					 Assigned_Group as Group_
-					 from HPD_Help_Desk 
-					 where Submitter='$UserID'
-					 AND $TimeCalc > dateadd(minute,-10,'$SessionStart') 
-					 AND $TimeCalc < dateadd(minute,10,'$SessionEnd')" ;
-		
-				$Sort = "Incident_Number";			
-			} else {
-				$TimeCalc = "(cast ('Jan 1 1970' as datetime) + ((((Arrival_Time / 60.0) / 60.0) - $GMTOFFSET ) /24.0)) ";
-				$q = "select Group_,Case_ID_ as CaseID,Summary,$TimeCalc as Date "	.
-					"from HPD_HelpDesk " .
-					"where Submitted_by='$UserID' "  .
-					"AND $TimeCalc > dateadd(minute,-10,'$SessionStart') " .
-					"AND $TimeCalc < dateadd(minute,10,'$SessionEnd') " ;
-		
-				$Sort = "Case_ID_";
-			}
-			$LB = new ListBox('Remedy Cases created during session:',$RemDB,$q,$Fields,$Sort,'','',0);
-			$LB->width="100%";
-			$LB->Form=1;
-			$LB->Display();	
-	  } 
-	  ?>
 	  </td>
     </tr>
   </table>

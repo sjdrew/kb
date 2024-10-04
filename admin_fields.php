@@ -16,6 +16,8 @@
 <center>
 <br>
 <?
+    $msg = GetVar('msg');
+    
 	ShowErrorLine($msg);
 	
 	//
@@ -38,6 +40,7 @@
 			$Tmp[] = $T;
 	}
 	$Tables = $Tmp;
+    $TableName = GetVar('TableName');
 	if ($TableName == "") $TableName = $Tables[0];
 	
 	$Cols = $AppDB->MetaColumns($TableName);
@@ -90,8 +93,7 @@
 	dropdownlist("TableName",$Tables,$Tables,$TableName,"onchange='F_LT1.submit()'");
 	$DropHTML = ob_get_contents();
 	ob_end_clean();
-	
-	$title = "Table $Table Field Schema for: $DropHTML";
+	$title = "Table $TableName Field Schema for: $DropHTML";
 	$LB = new ListBox("$title",$AppDB,$q,$Fields,$Sort,"admin_field.php",$subtitle,1);
 	$LB->Form=1;
 	$LB->PageSize=50;

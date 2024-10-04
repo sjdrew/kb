@@ -106,12 +106,12 @@ class dUnzip2{
 				// Convert the date and time, from MS-DOS format to UNIX Timestamp
 				$BINlastmod_date = str_pad(decbin($file['lastmod_date'][1]), 16, '0', STR_PAD_LEFT);
 				$BINlastmod_time = str_pad(decbin($file['lastmod_time'][1]), 16, '0', STR_PAD_LEFT);
-				$lastmod_dateY = bindec(substr($BINlastmod_date,  0, 7))+1980;
-				$lastmod_dateM = bindec(substr($BINlastmod_date,  7, 4));
-				$lastmod_dateD = bindec(substr($BINlastmod_date, 11, 5));
-				$lastmod_timeH = bindec(substr($BINlastmod_time,   0, 5));
-				$lastmod_timeM = bindec(substr($BINlastmod_time,   5, 6));
-				$lastmod_timeS = bindec(substr($BINlastmod_time,  11, 5));
+				$lastmod_dateY = bindec(substr((string)$BINlastmod_date,  0, 7))+1980;
+				$lastmod_dateM = bindec(substr((string)$BINlastmod_date,  7, 4));
+				$lastmod_dateD = bindec(substr((string)$BINlastmod_date, 11, 5));
+				$lastmod_timeH = bindec(substr((string)$BINlastmod_time,   0, 5));
+				$lastmod_timeM = bindec(substr((string)$BINlastmod_time,   5, 6));
+				$lastmod_timeS = bindec(substr((string)$BINlastmod_time,  11, 5));
 				
 				// Mount file table
 				$this->compressedList[$file['file_name']] = Array(
@@ -159,12 +159,12 @@ class dUnzip2{
 				// Convert the date and time, from MS-DOS format to UNIX Timestamp
 				$BINlastmod_date = str_pad(decbin($file['lastmod_date'][1]), 16, '0', STR_PAD_LEFT);
 				$BINlastmod_time = str_pad(decbin($file['lastmod_time'][1]), 16, '0', STR_PAD_LEFT);
-				$lastmod_dateY = bindec(substr($BINlastmod_date,  0, 7))+1980;
-				$lastmod_dateM = bindec(substr($BINlastmod_date,  7, 4));
-				$lastmod_dateD = bindec(substr($BINlastmod_date, 11, 5));
-				$lastmod_timeH = bindec(substr($BINlastmod_time,   0, 5));
-				$lastmod_timeM = bindec(substr($BINlastmod_time,   5, 6));
-				$lastmod_timeS = bindec(substr($BINlastmod_time,  11, 5));	
+				$lastmod_dateY = bindec(substr((string)$BINlastmod_date,  0, 7))+1980;
+				$lastmod_dateM = bindec(substr((string)$BINlastmod_date,  7, 4));
+				$lastmod_dateD = bindec(substr((string)$BINlastmod_date, 11, 5));
+				$lastmod_timeH = bindec(substr((string)$BINlastmod_time,   0, 5));
+				$lastmod_timeM = bindec(substr((string)$BINlastmod_time,   5, 6));
+				$lastmod_timeS = bindec(substr((string)$BINlastmod_time,  11, 5));	
 				
 				$this->centralDirList[$dir['file_name']] = Array(
 					'file_name'=>$dir['file_name'][1],
@@ -304,7 +304,7 @@ class dUnzip2{
 			++$this->Warnings;
 			return false;
 		}
-		if(substr($compressedFileName, -1) == "/"){
+		if(substr((string)$compressedFileName, -1) == "/"){
 			$this->debugMsg(2, "Trying to unzip a folder name '<b>$compressedFileName</b>'.");
 			return false;
 		}
@@ -338,7 +338,7 @@ class dUnzip2{
 			$dirname  = dirname($fileName);
 			$outDN    = "$targetDir/$dirname";
 			
-			if(substr($dirname, 0, strlen($baseDir)) != $baseDir)
+			if(substr((string)$dirname, 0, strlen((string)$baseDir)) != $baseDir)
 				continue;
 			
 			if(!is_dir($outDN) && $maintainStructure){
@@ -354,7 +354,7 @@ class dUnzip2{
 					}
 				}
 			}
-			if(substr($fileName, -1, 1) == "/")
+			if(substr((string)$fileName, -1, 1) == "/")
 				continue;
 			
 			$maintainStructure?

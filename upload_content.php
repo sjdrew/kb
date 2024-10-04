@@ -15,6 +15,8 @@
 <?
 function get_mime_headers($fd)
 {
+    $header_item = '';
+    $headers = [];
 	while(!feof($fd)) {
 		$line = fgets($fd);
 		if (chop($line) == "")
@@ -24,8 +26,8 @@ function get_mime_headers($fd)
 			continue;
 		}
 		if ($pos = strpos($line,":")) {
-			$header_item = trim(substr($line,0,$pos));
-			$headers[$header_item] = trim(substr($line,$pos+1));
+			$header_item = trim(substr((string)$line,0,$pos));
+			$headers[$header_item] = trim(substr((string)$line,$pos+1));
 		}
 	}
 	return $headers;
@@ -76,14 +78,16 @@ Content-Type: text/html; charset="us-ascii"
 	if ( ($ct = $headers["Content-Type"]) && stristr($ct,"multipart")) {
 		$pos = strpos($ct,"boundary=");
 		if (!$pos) return "No MIME boundary specified";
-		$boundary = chop(substr($ct,$pos+strlen("boundary="))); 
-		if (substr($boundary,0,1) == "\"") $boundary = substr($boundary,1,strlen($boundary)-2); // remove quotes
+		$boundary = chop(substr((string)$ct,$pos+strlen("boundary="))); 
+		if (substr((string)$boundary,0,1) == "\"") $boundary = substr((string)$boundary,1,strlen((string)$boundary)-2); // remove quotes
 		if ($boundary == "") {
 			$ErrMsg =  "Not a Multipart MIME file as expected.";
 			return "";
 		}
 		$boundary = "--" . $boundary;
 		$file_headers = array();
+        $first_file = '';
+        $fname = '';
 		// untill done file, split files into files array
 		while(!feof($fd)) {
 			$line = fgets($fd);
@@ -94,6 +98,8 @@ Content-Type: text/html; charset="us-ascii"
 				$file_headers = get_mime_headers($fd);
 				list($garb,$origname) = explode("file://",$file_headers["Content-Location"]);
 				$fname = basename($origname);
+                Logger("fname = $fname");
+                $files[$fname] = new stdClass();
 				$files[$fname]->orignal_name = $origname;
 				$files[$fname]->headers = $file_headers;		
 				$file_name = $files_path . "/" . $fname;
@@ -101,7 +107,12 @@ Content-Type: text/html; charset="us-ascii"
 				if ($first_file == "") $first_file = $fname;
 				continue;				
 			}
-			$files[$fname]->contents .= $line;	
+            if ($fname) {
+                if (!isset($files[$fname]->contents)) {
+                    $files[$fname]->contents = '';
+                }
+                $files[$fname]->contents .= $line;	
+            }
 		}		
 	}
 	else { // not multipart
@@ -122,6 +133,7 @@ Content-Type: text/html; charset="us-ascii"
 	foreach($files as $fname => $f) {
 		switch($f->headers['Content-Transfer-Encoding']) {
 			case "quoted-printable":
+                Logger("Quoted printable");
 				$f->contents = str_replace("=3D","=",$f->contents);
 				$f->contents = str_replace("=20"," ",$f->contents);
 				$f->contents = str_replace("=\r\n","",$f->contents);
@@ -134,7 +146,8 @@ Content-Type: text/html; charset="us-ascii"
 					// Note with current ereg previous file path cannot have space
 					foreach(array_keys($files) as $newfile) {
 						if ($newfile) {
-							$f->contents = eregi_replace("(src=\")([a-zA-Z0-9_/-?&%-])*(/$newfile\")", "src=\"" . $url_path . $newfile . "\"", $f->contents); 
+                            Logger("New File = $newfile, $url_path");
+							$f->contents = preg_replace("/(src=\")([a-zA-Z0-9\._\/-?&%])*($newfile\")/i", "src=\"" . $url_path . $newfile . "\"", $f->contents); 
 						}
 					}
 				}
@@ -144,6 +157,7 @@ Content-Type: text/html; charset="us-ascii"
 				if ($fname == $first_file) $contents = $f->contents;
 				break;
 			case "base64":
+                Logger("base 64 ".$f->file_name);
 				$f->contents = base64_decode($f->contents);
 				$of = fopen($f->file_name,"w");
 				fwrite($of,$f->contents);
@@ -188,6 +202,7 @@ $stripAttrib = 'javascript:|onclick|ondblclick|onmousedown|onmouseup|onmouseover
  */
 function removeEvilTags($source)
 {
+   return $source; // TODO: strip script tags
    global $allowedTags;
    /*
     * Since strip_tags removes all comments and <-![if > tags it also removes
@@ -203,7 +218,7 @@ function removeEvilTags($source)
 
 function removeScriptTags($source)
 {
-	return ereg_replace("~<script[^>]*>.+</script[^>]*>~isU", "", $source); 
+	return preg_replace("~<script[^>]*>.+</script[^>]*>~isU", "", $source); 
 }
 
 /**
@@ -219,16 +234,15 @@ function removeEvilAttributes($tagSource)
 
 function upload_file(&$msg)
 {
-	global $MAX_FILE_SIZE, $ID;
-	global $HTTP_POST_FILES;
+	global $ID;
 	global $AppDB;
 	
-	if ($MAX_FILE_SIZE && $ID) {	
-		if (is_uploaded_file($HTTP_POST_FILES['attachmentfile']['tmp_name'])) {
+	if (!empty($_FILES) && $ID) {	
+		if (is_uploaded_file($_FILES['attachmentfile']['tmp_name'])) {
 			clearstatcache();
-			$orig_name = $HTTP_POST_FILES['attachmentfile']['name'];
+			$orig_name = $_FILES['attachmentfile']['name'];
 			$basename = basename($orig_name);			
-			$filename = $HTTP_POST_FILES['attachmentfile']['tmp_name'];
+			$filename = $_FILES['attachmentfile']['tmp_name'];
 			$fd = @fopen($filename, "rb");
 			if ($fd) {
 				$filesize = @filesize($filename);
@@ -243,7 +257,8 @@ function upload_file(&$msg)
 						$files_path = APP_ROOT_DIR . FILES_FOLDER . fmt_kb($ID);	
 						$url_path = FILES_FOLDER . fmt_kb($ID) . "/";
 						$msg = "";
-						$contents = mht_to_html($fd,$files_path,$url_path,$msg);			
+						$contents = mht_to_html($fd,$files_path,$url_path,$msg);
+                        Logger("CONTENTS = ".print_r($contents,1));			
 					}	
 					//else $contents = fread($fd, $filesize);
 					else $msg = "Only .mht or .mhtml files maybe imported";
@@ -253,8 +268,8 @@ function upload_file(&$msg)
 
 						$OldRec = $AppDB->GetRecordFromQuery("select * from Articles where ID=$ID");
 						if ($OldRec) CreateArchiveRecord($OldRec);
-						$AFields[ArticleID] = $ID;
-						$AFields[Trail] = "Imported content from " . $basename . " by " . $CUser->u->FirstName . " " . $CUser->u->LastName;
+						$AFields['ArticleID'] = $ID;
+						$AFields['Trail'] = "Imported content from " . $basename . " by " . $CUser->u->FirstName . " " . $CUser->u->LastName;
 						AuditTrail("AddContent",$AFields);
 						$LMSETS["ContentLastModified"] = "GetDate()";
 						$LMSETS["Content"] = $contents;
@@ -274,11 +289,11 @@ function upload_file(&$msg)
 	}
 	return(0);
 }
-if ($MAX_FILE_SIZE) { // uploading
+if (!empty($_FILES)) { // uploading
 	BusyImage(1,"Please wait...");
 }
 ?>
-<form enctype="multipart/form-data" action="<?  echo $PHP_SELF ?>" method="post">
+<form enctype="multipart/form-data" action="<?  echo $_SERVER['PHP_SELF'] ?>" method="post">
 <?
 	hidden("ID",GetVar("ID"));
 	hidden("nohdr",GetVar("nohdr")); // so when we refresh parent we do it right in case in frame.
@@ -292,7 +307,7 @@ if ($MAX_FILE_SIZE) { // uploading
 	<tr>
 	   <td class="DialogBody" valign="top">
         <table height="350" width="100%" <? echo $FORM_STYLE ?>>
-		<?  if ($MAX_FILE_SIZE) {  ?>
+		<?  if (!empty($_FILES)) {   ?>
             <tr>
             	<td class="form-data" align="center" colspan="2" height="140">
                   <?

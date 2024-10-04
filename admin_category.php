@@ -1,6 +1,12 @@
 <? include("config.php"); 
 
 $ID = GetVar("ID");
+$Table = GetVar("Type");
+$Save = GetVar('Save');
+$Delete = GetVar('Delete');
+$msg = GetVar('msg');
+$rdonly = GetVar('rdonly');
+
 
 RequirePriv(PRIV_APPROVER);
 
@@ -26,7 +32,7 @@ function ProcessDelete($Table,$ID)
 {
 	global $AppDB;
 	
-	if ($_POST[Delete] && $ID) {
+	if ($_POST['Delete'] && $ID) {
 		// Delete 
 		$AppDB->sql("delete from $Table where ID = $ID");
 		header("location:admin_categories.php?msg=record deleted.");
@@ -34,23 +40,25 @@ function ProcessDelete($Table,$ID)
 	}
 }
 
-	$Singular = $Table = GetVar("Type");
+	$Singular = $Table;
 	$CategoryName = $Table;
-	$Custom1Label = (trim($AppDB->Settings->Custom1Label) != "") ? $AppDB->Settings->Custom1Label : "Custom1";
+	$Custom1Label = (trim((string)$AppDB->Settings->Custom1Label) != "") ? $AppDB->Settings->Custom1Label : "Custom1";
 	if ($Table == "Custom1") $Singular = $CategoryName = $Custom1Label;
-	if (substr($CategoryName,strlen($CategoryName)-1,1) == "s") $Singular = substr($CategoryName,0,strlen($CategoryName) - 1);
+	if (substr((string)$CategoryName,strlen((string)$CategoryName)-1,1) == "s") $Singular = substr((string)$CategoryName,0,strlen((string)$CategoryName) - 1);
 	
 	// Handle, Save, Delete, and Reposting
 	if ($Save) {
-		$ID = ProcessSave($Table,$ID,$rdonly,&$msg,&$Err);		
+		$ID = ProcessSave($Table,$ID,$rdonly,$msg,$Err);		
 	}
 		
 	if ($Delete && $ID) {
 		ProcessDelete($Table,$ID);
 	}
 	
+    $F = [];
 	if ($ID) {
 		$F = $AppDB->get_record_assoc($ID,$Table);
+        $F['Type'] = GetVar('Type');
 		if (!$F) {
 			header("location:admin.php?msg=Item not found");
 			exit;
@@ -59,14 +67,14 @@ function ProcessDelete($Table,$ID)
 	}
 	
 	if ($_POST) {
-		// keep reposted values, but strip slashes
-		repost_stripslashes();
-		if ($CopyToNew) {
-			$ID = $LASTMODIFIEDBY = $LASTMODIFIED = $CREATED = $CREATEDBY = "";
+        $F = array_merge($F,$_POST);
+		if (isset($_POST['CopyToNew'])) {
+			$ID = $F['ID'] = $F['LASTMODIFIEDBY'] = $F['LASTMODIFIED'] = $F['CREATED'] = $F['CREATEDBY'] = "";
 		}
 	} else if (!$ID) {
 		// defaults
-		$STATUS = "Active";
+		$F['STATUS'] = "Active";
+        $F['Type'] = GetVar('Type');
 	}
 	
 
@@ -90,9 +98,9 @@ function ParseForm(f)
 }
 </script>
 <? include("header.php"); ?>
-<form onSubmit="ParseForm(this)" name=form action="<? echo $PHP_SELF ?>" method="post">
+<form onSubmit="ParseForm(this)" name=form action="<? echo $_SERVER['PHP_SELF'] ?>" method="post">
 <? hidden("ID",$ID); 
-   hidden("Type",$Type);
+   hidden("Type",$F['Type']);
 ?>
 <table width="100%" border=0 cellspacing=0 cellpadding=0><tr>
 <td width="25%" class="subhdr">
@@ -101,7 +109,7 @@ function ParseForm(f)
 <? echo $Singular ?> Category</span></td>
 <td align="left" width="75%">&nbsp;<? ShowMsgBox($msg); ?></td>
 </tr></table>
-<div align="center">
+<div align="center" style="margin-top:10px">
        
 	    <div class="shadowboxfloat">
           <div class="shadowcontent">
@@ -111,11 +119,11 @@ function ParseForm(f)
     <td width="100%"><table width="100%" <? echo $FORM_STYLE ?> >
         <tr>
           <td width="19%" class="form-hdr">Value:</td>
-          <td width="81%" class="form-data"><? DBField($Table,"Name",$Name); ?></td>
+          <td width="81%" class="form-data"><? DBField($Table,"Name",$F['Name']); ?></td>
         </tr>
         <tr>
           <td class="form-hdr">Status</td>
-          <td class="form-data"><? DBField($Table,"STATUS",$STATUS); ?></td>
+          <td class="form-data"><? DBField($Table,"STATUS",$F['STATUS']); ?></td>
         </tr>
         <tr>
           <td colspan="2" align="right" class="form-hdr">
@@ -123,7 +131,7 @@ function ParseForm(f)
 			<? if ($ID) { ?> 
 		    <input type="submit" onClick="return confirm('Are you sure?')" name="Delete" value="Delete">  
 			<? } ?>
-		    <input onClick="window.location='admin_categories.php?Type=<? echo $Type ?>'" name="Back" type="button" id="Back" value="Back">
+		    <input onClick="window.location='admin_categories.php?Type=<? echo $F['Type'] ?>'" name="Back" type="button" id="Back" value="Back">
             </td>
           </tr>
       </table>	   

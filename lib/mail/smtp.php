@@ -6,8 +6,8 @@
 * Last Modified..: 21 December 2001
 */
 
-	define('SMTP_STATUS_NOT_CONNECTED', 1, TRUE);
-	define('SMTP_STATUS_CONNECTED', 2, TRUE);
+	define('SMTP_STATUS_NOT_CONNECTED', 1);
+	define('SMTP_STATUS_CONNECTED', 2);
 
 	class smtp{
 
@@ -43,10 +43,10 @@
 		*             to fsockopen()
         */
 
-		function smtp($params = array()){
+		function __construct($params = array()){
 
 			if(!defined('CRLF'))
-				define('CRLF', "\r\n", TRUE);
+				define('CRLF', "\r\n");
 
 			$this->authenticated	= FALSE;			
 			$this->timeout			= 5;
@@ -58,10 +58,6 @@
 			$this->user				= '';
 			$this->pass				= '';
 			$this->errors   		= array();
-			
-			$this->debug = 0; // just for debugging smtp traffic
-			
-			$this->debug_data("\r\n---------------------------------------------------------\r\n\r\n");
 
 			foreach($params as $key => $value){
 				$this->$key = $value;
@@ -77,7 +73,7 @@
 		* the HELO command.
         */
 
-		function &connect($params = array()){
+		function connect($params = array()){
 
 			if(!isset($this->status)){
 				$obj = new smtp($params);
@@ -89,6 +85,9 @@
 
 			}else{
 				$this->connection = fsockopen($this->host, $this->port, $errno, $errstr, $this->timeout);
+                if (!$this->connection) {
+                    return FALSE;
+                }
 				if(function_exists('socket_set_timeout')){
 					@socket_set_timeout($this->connection, 5, 0);
 				}
@@ -144,6 +143,10 @@
 				// Transparency
 				$headers = str_replace(CRLF.'.', CRLF.'..', trim(implode(CRLF, $this->headers)));
 				$body    = str_replace(CRLF.'.', CRLF.'..', $this->body);
+                //Steve: SMTP rules say any line starting with a . must be changed to ..
+                //above only catches lines with CRLF, however most of the time the body is just LF
+				$body    = str_replace("\n".'.', "\n".'..', $this->body);
+                
 				$body    = $body[0] == '.' ? '.'.$body : $body;
 
 				$this->send_data($headers);
@@ -151,7 +154,7 @@
 				$this->send_data($body);
 				$this->send_data('.');
 
-				$result = (substr(trim($this->get_data()), 0, 3) === '250');
+				$result = (substr(trim((string)$this->get_data()), 0, 3) === '250');
 				//$this->rset();
 				return $result;
 			}else{
@@ -167,12 +170,12 @@
 		function helo(){
 			if(is_resource($this->connection)
 					AND $this->send_data('HELO '.$this->helo)
-					AND substr(trim($error = $this->get_data()), 0, 3) === '250' ){
+					AND substr(trim((string)$error = $this->get_data()), 0, 3) === '250' ){
 
 				return TRUE;
 
 			}else{
-				$this->errors[] = 'HELO command failed, output: ' . trim(substr(trim($error),3));
+				$this->errors[] = 'HELO command failed, output: ' . trim(substr(trim((string)$error),3));
 				return FALSE;
 			}
 		}
@@ -184,12 +187,12 @@
 		function ehlo(){
 			if(is_resource($this->connection)
 					AND $this->send_data('EHLO '.$this->helo)
-					AND substr(trim($error = $this->get_data()), 0, 3) === '250' ){
+					AND substr(trim((string)$error = $this->get_data()), 0, 3) === '250' ){
 
 				return TRUE;
 
 			}else{
-				$this->errors[] = 'EHLO command failed, output: ' . trim(substr(trim($error),3));
+				$this->errors[] = 'EHLO command failed, output: ' . trim(substr(trim((string)$error),3));
 				return FALSE;
 			}
 		}
@@ -201,12 +204,12 @@
 		function rset(){
 			if(is_resource($this->connection)
 					AND $this->send_data('RSET')
-					AND substr(trim($error = $this->get_data()), 0, 3) === '250' ){
+					AND substr(trim((string)$error = $this->get_data()), 0, 3) === '250' ){
 
 				return TRUE;
 
 			}else{
-				$this->errors[] = 'RSET command failed, output: ' . trim(substr(trim($error),3));
+				$this->errors[] = 'RSET command failed, output: ' . trim(substr(trim((string)$error),3));
 				return FALSE;
 			}
 		}
@@ -218,14 +221,14 @@
 		function quit(){
 			if(is_resource($this->connection)
 					AND $this->send_data('QUIT')
-					AND substr(trim($error = $this->get_data()), 0, 3) === '221' ){
+					AND substr(trim((string)$error = $this->get_data()), 0, 3) === '221' ){
 
 				fclose($this->connection);
 				$this->status = SMTP_STATUS_NOT_CONNECTED;
 				return TRUE;
 
 			}else{
-				$this->errors[] = 'QUIT command failed, output: ' . trim(substr(trim($error),3));
+				$this->errors[] = 'QUIT command failed, output: ' . trim(substr(trim((string)$error),3));
 				return FALSE;
 			}
 		}
@@ -237,17 +240,17 @@
 		function auth(){
 			if(is_resource($this->connection)
 					AND $this->send_data('AUTH LOGIN')
-					AND substr(trim($error = $this->get_data()), 0, 3) === '334'
+					AND substr(trim((string)$error = $this->get_data()), 0, 3) === '334'
 					AND $this->send_data(base64_encode($this->user))			// Send username
-					AND substr(trim($error = $this->get_data()),0,3) === '334'
+					AND substr(trim((string)$error = $this->get_data()),0,3) === '334'
 					AND $this->send_data(base64_encode($this->pass))			// Send password
-					AND substr(trim($error = $this->get_data()),0,3) === '235' ){
+					AND substr(trim((string)$error = $this->get_data()),0,3) === '235' ){
 
 				$this->authenticated = TRUE;
 				return TRUE;
 
 			}else{
-				$this->errors[] = 'AUTH command failed: ' . trim(substr(trim($error),3));
+				$this->errors[] = 'AUTH command failed: ' . trim(substr(trim((string)$error),3));
 				return FALSE;
 			}
 		}
@@ -260,7 +263,7 @@
 
 			if($this->is_connected()
 				AND $this->send_data('MAIL FROM:<'.$from.'>')
-				AND substr(trim($this->get_data()), 0, 2) === '250' ){
+				AND substr(trim((string)$this->get_data()), 0, 2) === '250' ){
 
 				return TRUE;
 
@@ -276,12 +279,12 @@
 
 			if($this->is_connected()
 				AND $this->send_data('RCPT TO:<'.$to.'>')
-				AND substr(trim($error = $this->get_data()), 0, 2) === '25' ){
+				AND substr(trim((string)$error = $this->get_data()), 0, 2) === '25' ){
 
 				return TRUE;
 
 			}else{
-				$this->errors[] = trim(substr(trim($error), 3));
+				$this->errors[] = trim(substr(trim((string)$error), 3));
 				return FALSE;
 			}
 		}
@@ -294,12 +297,12 @@
 
 			if($this->is_connected()
 				AND $this->send_data('DATA')
-				AND substr(trim($error = $this->get_data()), 0, 3) === '354' ){
+				AND substr(trim((string)$error = $this->get_data()), 0, 3) === '354' ){
  
 				return TRUE;
 
 			}else{
-				$this->errors[] = trim(substr(trim($error), 3));
+				$this->errors[] = trim(substr(trim((string)$error), 3));
 				return FALSE;
 			}
 		}
@@ -321,39 +324,25 @@
 		function send_data($data){
 
 			if(is_resource($this->connection)){
-				$this->debug_data("Send: " . $data . "\r\n");
-				return fwrite($this->connection, $data.CRLF, strlen($data)+2);
+				return fwrite($this->connection, $data.CRLF, strlen((string)$data)+2);
 				
 			}else
 				return FALSE;
-		}
-		
-		function debug_data($str)
-		{
-			if ($this->debug == 1) {
-				$fp = fopen("C:\\PHP\\Temp\\debug_smtp.txt","a+");
-				if ($fp) {
-					$datestr = date("Y-m-d H:i:s");
-					fwrite($fp,"$datestr - " . $str);
-					fclose($fp);
-				}
-			}
 		}
 
 		/**
         * Function to get data.
         */
 
-		function &get_data(){
+		function get_data(){
 
 			$return = '';
 			$line   = '';
 			$loops  = 0;
 
 			if(is_resource($this->connection)){
-				while((strpos($return, CRLF) === FALSE OR substr($line,3,1) !== ' ') AND $loops < 100){
+				while((strpos($return, CRLF) === FALSE OR substr((string)$line,3,1) !== ' ') AND $loops < 100){
 					$line    = fgets($this->connection, 512);
-					$this->debug_data("Get: " . $line);
 					$return .= $line;
 					$loops++;
 				}

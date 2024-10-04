@@ -2,6 +2,9 @@
    	RequirePriv(PRIV_ADMIN);
 	$ID = GetVar("ID");
 	$Table = "Settings";
+    $msg = GetVar('msg');
+    $rdonly = GetVar('rdonly');
+
 
 function ProcessSave($ID,$rdonly,&$msg,&$Err,$Multi=0)
 {
@@ -14,72 +17,19 @@ function ProcessSave($ID,$rdonly,&$msg,&$Err,$Multi=0)
 		
 	if ($ID) {
 		// checkboxes do not post if not set
-		if ($_POST[FullTextBackground] == "") $_POST[FullTextBackground] = 0;
-		if ($_POST[RemedyFullTextBackground] == "") $_POST[RemedyFullTextBackground] = 0;
-		if ($_POST[LastModifyLock] == "") $_POST[LastModifyLock] = 0;
-		if ($_POST[DontLogAdmin] == "") $_POST[DontLogAdmin] = 0;
-		if ($_POST[FiltersOnHomePage] == "") $_POST[FiltersOnHomePage] = 0;
-		if ($_POST[AllowCreateBulletins] == "") $_POST[AllowCreateBulletins] = 0;
-		if ($_POST[AllowCreateBulletinsW] == "") $_POST[AllowCreateBulletinsW] = 0;
-		if ($_POST[AllowModifyArticles] == "") $_POST[AllowModifyArticles] = 0;
-		if ($_POST[IndicatePrivateArticle] == "") $_POST[IndicatePrivateArticle] = 0;
+		if (empty($_POST['FullTextBackground'])) $_POST['FullTextBackground'] = 0;
+		if (empty($_POST['LastModifyLock'])) $_POST['LastModifyLock'] = 0;
+		if (empty($_POST['DontLogAdmin'])) $_POST['DontLogAdmin'] = 0;
+		if (empty($_POST['FiltersOnHomePage'])) $_POST['FiltersOnHomePage'] = 0;
+		if (empty($_POST['AllowCreateBulletins'])) $_POST['AllowCreateBulletins'] = 0;
+		if (empty($_POST['AllowCreateBulletinsW'])) $_POST['AllowCreateBulletinsW'] = 0;
+		if (empty($_POST['AllowModifyArticles'])) $_POST['AllowModifyArticles'] = 0;
+		if (empty($_POST['IndicatePrivateArticle'])) $_POST['IndicatePrivateArticle'] = 0;
 
-		if ($_POST['InitCatalog']) {
-			InitFullTextCatalog(&$msg);
+		if (GetVar('InitCatalog')) {
+			InitFullTextCatalog($msg);
 		}
-
-		$AppDB->Settings->RemedyARServer = $_POST['RemedyARServer'];
-		$AppDB->Settings->RemedyDBServer = $_POST['RemedyDBServer'];
-		
-		if (trim($AppDB->Settings->RemedyDBServer) == "")  {
-			$_POST['RemedyDBServer'] = $AppDB->Settings->RemedyDBServer = $AppDB->Settings->RemedyARServer;
-		}
-		
-		if ($AppDB->Settings->RemedyDBServer) {
-			$RemDB = OpenRemedyDB();
-			
-			if ($RemDB) { 
-			$Schema = 'HPD:Help Desk';
-			if (REMEDY_VERSION == 6) $Schema = "HPD:HelpDesk";
-			
-			$SRec = $RemDB->GetRecordFromQuery("select * from arschema where name = '$Schema'");
-			if (!$SRec) {
-				$msg = "Cannot locate Remedy 'HPD:Help Desk' schema. Check Remedy settings in config.php.";
-			} else {
-				 $_POST['HelpDeskTable'] = $AppDB->Settings->HelpDeskTable = $SRec->schemaId;
-			}
-			
-			if (REMEDY_VERSION != 6) {
-				$WRec = $RemDB->GetRecordFromQuery("select * from arschema where name = 'HPD:WorkLog'");
-				if (!$WRec) {
-					$msg = "Cannot locate Remedy 'HPD:WorkLog' schema. Check Remedy settings in config.php.";
-				} else {
-					 $_POST['HDWorkLogTable'] = $AppDB->Settings->HDWorkLogTable = $WRec->schemaId;
-				}
-				
-
-				$WRec = $RemDB->GetRecordFromQuery("select * from arschema where name = 'PBM:Known Error WorkLog'");
-				if (!$WRec) {
-					$msg = "Cannot locate Remedy 'PBM:Known Error Worklog' schema. Check Remedy settings in config.php.";
-				} else {
-					 $_POST['KnownErrorWorkLogTable'] = $AppDB->Settings->KnownErrorWorkLogTable = $WRec->schemaId;
-				}
-
-
-				$WRec = $RemDB->GetRecordFromQuery("select * from arschema where name = 'PBM:Known Error'");
-				if (!$WRec) {
-					$msg = "Cannot locate Remedy 'PBM:Known Error' schema. Check Remedy settings in config.php.";
-				} else {
-					 $_POST['KnownErrorTable'] = $AppDB->Settings->KnownErrorTable = $WRec->schemaId;
-				}
-
-
-
-			}
-			} else {
-				$msg .= "Unable to Connect to Remedy Server";
-			}
-		}
+	
 	
 		$ModFields = $AppDB->modify_form($ID,$Table,0,$Multi);
 		if ($_POST['FullTextBackground']) {
@@ -95,9 +45,7 @@ function ProcessSave($ID,$rdonly,&$msg,&$Err,$Multi=0)
 			$AppDB->sql("Exec sp_fulltext_table 'ArticleAttachments', 'stop_change_tracking'");
 			$AppDB->sql("EXEC sp_fulltext_table 'ArticleAttachments', 'stop_background_updateindex'");		
 		}
-		if ($_POST['InitRemedyCatalog']) {
-			if ($RemDB) InitRemedyFullTextCatalog(&$msg);
-		}
+
 		if ($msg == "") $msg = "Changes were saved.";
 	}
 	else {
@@ -106,307 +54,22 @@ function ProcessSave($ID,$rdonly,&$msg,&$Err,$Multi=0)
 	return $ID;
 }
 
-
-function InitRemedyFullTextCatalog(&$msg)
-{
-	global $AppDB;
-	
-	$RemDB = OpenRemedyDB();
-	$DBNAME = "ARSystem";
-		
-	if ($AppDB->Settings->HelpDeskTable == "") {
-		$msg .= "Cannot enable Full Text Catalog on Remedy Help Desk";
-		return;
-	}
-	
-	$HelpDeskTable = $AppDB->Settings->HelpDeskTable;
-	
-	$FullTextFields = array("Description","Detailed Decription",
-			"Assigned Group","Resolution",
-			"Last Name","Site","Department",
-			"Categorization Tier 1",
-			"Categorization Tier 2",
-			"Categorization Tier 3",
-			"Product Name","Product Model/Version","Incident Number");
-	
-	$Columns = array();
-	
-	foreach($FullTextFields as $FieldName) {		
-		$CRec = $RemDB->GetRecordFromQuery("select fieldId,fieldName from field 
-				where schemaId = $HelpDeskTable and fieldName = '$FieldName'");
-
-		if (!$CRec) {
-			$msg .= "Warning: $FieldName not found on form HPD:Help Desk";
-			continue;
-		}
-		$Columns[] = "C" . $CRec->fieldId;
-	}
-	
-	if (count($Columns) == 0) {
-		$msg .= "Unable to locate specified Help Desk Table columns for Full Text indexing.";
-		return;
-	}
-	
-	$WorkLogTable = "T" . $AppDB->Settings->HDWorkLogTable;
-	$HelpDeskTable = "T" . $HelpDeskTable;
-
-	$KnownErrorTable = "T" . $AppDB->Settings->KnownErrorTable;
-	$KnownErrorWorkLogTable = "T" . $AppDB->Settings->KnownErrorWorkLogTable;
-	
-	/* 
-	 * Enable Full Text Catalogs, first remove if already there.
-	 */
-	$RemDB->sql("if (select DATABASEPROPERTY('$DBNAME', N'IsFullTextEnabled')) <> 1 exec sp_fulltext_database N'enable' ");	
-			
-	/* drop current full text on tables */		
-	$RemDB->sql("if OBJECTPROPERTY(object_id('$HelpDeskTable'),'TableHasActiveFulltextIndex') = 1 exec sp_fulltext_table  N'[dbo].[$HelpDeskTable]', N'drop'");
-
-	$RemDB->sql("if OBJECTPROPERTY(object_id('$WorkLogTable'),'TableHasActiveFulltextIndex') = 1 exec sp_fulltext_table  N'[dbo].[$WorkLogTable]', N'drop'");
-
-	$RemDB->sql("if OBJECTPROPERTY(object_id('$KnownErrorTable'),'TableHasActiveFulltextIndex') = 1 exec sp_fulltext_table  N'[dbo].[$KnownErrorTable]', N'drop'");
-
-	$RemDB->sql("if OBJECTPROPERTY(object_id('$KnownErrorWorkLogTable'),'TableHasActiveFulltextIndex') = 1 exec sp_fulltext_table  N'[dbo].[$KnownErrorWorkLogTable]', N'drop'");
-
-	
-	/* drop catalog */		
-	//$RemDB->sql("if exists (select * from dbo.sysfulltextcatalogs where name = '$DBNAME') exec sp_fulltext_catalog '" . $DBNAME . "', N'drop'");
-			
-	/* create new catalog */
-	$RemDB->sql("if not exists (select * from dbo.sysfulltextcatalogs where name = '$DBNAME') exec sp_fulltext_catalog '" . $DBNAME . "', N'create'");
-	
-	
-	/*
-	 * must determin key name for Column C1
-	 */
-	$PK = $RemDB->GetRecordFromQuery("select k.constraint_name as PKName from information_schema.key_column_usage k,
-		information_schema.table_constraints tc 
-		where tc.constraint_name = k.constraint_name 
-		and tc.constraint_type = 'PRIMARY KEY' and k.table_name = '$HelpDeskTable'
-		and column_name = 'C1'");
-	$PKNAME = $PK->PKName;
-	if ($PKNAME == "") {
-		$msg .= "Unable to determine Primary Key name for $HelpDeskTable C1";
-		return;
-	}
-	/* create new fulltext on table */
-	$RemDB->sql($a = "exec sp_fulltext_table N'[dbo].[$HelpDeskTable]', N'create', '$DBNAME', N'$PKNAME'");
-
-	/* choose columns to fulltext on */
-	
-	foreach ($Columns as $Column) {
-		$RemDB->sql("exec sp_fulltext_column N'[dbo].[$HelpDeskTable]', N'$Column', N'add', 1033");
-	}
-		
-	/* Activate it */
-	$RemDB->sql("exec sp_fulltext_table N'[dbo].[$HelpDeskTable]', N'activate'");
-
-
-	/**
-	 * Similar steps for WorkLogTable (REMEDY 7 and Above)
-	 */
-	$WorkLogTable = $AppDB->Settings->HDWorkLogTable;
-	
-	if ($WorkLogTable) {
-		
-		$FullTextFields = array("Description","Detailed Description");
-		$Columns = array();
-	
-		foreach($FullTextFields as $FieldName) {		
-			$CRec = $RemDB->GetRecordFromQuery("select fieldId,fieldName from field 
-					where schemaId = $WorkLogTable and fieldName = '$FieldName'");
-			if (!$CRec) {
-				$msg .= "Warning: $FieldName not found on form HPD:WorkLog";
-				continue;
-			}
-			$Columns[] = "C" . $CRec->fieldId;
-		}
-			
-		if (count($Columns) == 0) {
-			$msg .= "Unable to locate specified HPD:WorkLog columns for Full Text indexing.";
-			return;
-		}
-
-		$WorkLogTable = "T" . $WorkLogTable;
-		
-		/* drop current full text on table */		
-		$RemDB->sql("if OBJECTPROPERTY(object_id('$WorkLogTable'),'TableHasActiveFulltextIndex') = 1 exec sp_fulltext_table  N'[dbo].[$WorkLogTable]', N'drop'");
-	
-		/*
-		 * must determin key name for Column C1
-		 */
-		$PK = $RemDB->GetRecordFromQuery("select k.constraint_name as PKName from information_schema.key_column_usage k,
-			information_schema.table_constraints tc 
-			where tc.constraint_name = k.constraint_name 
-			and tc.constraint_type = 'PRIMARY KEY' and k.table_name = '$WorkLogTable'
-			and column_name = 'C1'");
-		$PKNAME = $PK->PKName;
-		if ($PKNAME == "") {
-			$msg .= "Unable to determine Primary Key name for $WorkLogTable C1";
-		}
-		/* create new fulltext on table */
-		$RemDB->sql($a = "exec sp_fulltext_table N'[dbo].[$WorkLogTable]', N'create', '$DBNAME', N'$PKNAME'");
-
-		/* choose columns to fulltext on */	
-		foreach ($Columns as $Column) {
-			$RemDB->sql("exec sp_fulltext_column N'[dbo].[$WorkLogTable]', N'$Column', N'add', 1033");
-		}
-		
-		/* Activate it */
-		$RemDB->sql("exec sp_fulltext_table N'[dbo].[$WorkLogTable]', N'activate'");	
-	}
-
-
-	/**
-	 * Similar steps for KnownError Table (REMEDY 7 and Above)
-	 */
-	$Table = $AppDB->Settings->KnownErrorTable;
-	
-	if ($Table) {
-		
-		$FullTextFields = array("Description","Detailed Decription",
-			"Assigned Group","Resolution","Temporary Workaround",
-			"Product Name","Product Model/Version","Known Error ID","Generic Categorization Tier 1");
-		$Columns = array();
-	
-		foreach($FullTextFields as $FieldName) {		
-			$CRec = $RemDB->GetRecordFromQuery("select fieldId,fieldName from field 
-					where schemaId = $Table and fieldName = '$FieldName'");
-			if (!$CRec) {
-				$msg .= "Warning: $FieldName not found on form PRB:Known Error";
-				continue;
-			}
-			$Columns[] = "C" . $CRec->fieldId;
-		}
-			
-		if (count($Columns) == 0) {
-			$msg .= "Unable to locate specified PBM:Known Error columns for Full Text indexing.";
-			return;
-		}
-
-		$Table = "T" . $Table;
-		
-		/* drop current full text on table */		
-		$RemDB->sql("if OBJECTPROPERTY(object_id('$Table'),'TableHasActiveFulltextIndex') = 1 exec sp_fulltext_table  N'[dbo].[$Table]', N'drop'");
-	
-		/*
-		 * must determin key name for Column C1
-		 */
-		$PK = $RemDB->GetRecordFromQuery("select k.constraint_name as PKName from information_schema.key_column_usage k,
-			information_schema.table_constraints tc 
-			where tc.constraint_name = k.constraint_name 
-			and tc.constraint_type = 'PRIMARY KEY' and k.table_name = '$Table'
-			and column_name = 'C1'");
-		$PKNAME = $PK->PKName;
-		if ($PKNAME == "") {
-			$msg .= "Unable to determine Primary Key name for $Table C1";
-		}
-		/* create new fulltext on table */
-		$RemDB->sql($a = "exec sp_fulltext_table N'[dbo].[$Table]', N'create', '$DBNAME', N'$PKNAME'");
-
-		/* choose columns to fulltext on */	
-		foreach ($Columns as $Column) {
-			$RemDB->sql("exec sp_fulltext_column N'[dbo].[$Table]', N'$Column', N'add', 1033");
-		}
-		
-		/* Activate it */
-		$RemDB->sql("exec sp_fulltext_table N'[dbo].[$Table]', N'activate'");	
-	}
-
-	/**
-	 * Similar steps for KnownError Worklog Table (REMEDY 7 and Above)
-	 */
-	$Table = $AppDB->Settings->KnownErrorWorkLogTable;
-	
-	if ($Table) {
-		
-		$FullTextFields = array("Description","Detailed Description");
-		$Columns = array();
-	
-		foreach($FullTextFields as $FieldName) {		
-			$CRec = $RemDB->GetRecordFromQuery("select fieldId,fieldName from field 
-					where schemaId = $Table and fieldName = '$FieldName'");
-			if (!$CRec) {
-				$msg .= "Warning: $FieldName not found on form PRB:Known Error WorkLog";
-				continue;
-			}
-			$Columns[] = "C" . $CRec->fieldId;
-		}
-			
-		if (count($Columns) == 0) {
-			$msg .= "Unable to locate specified PBM:Known Error WorkLog columns for Full Text indexing.";
-			return;
-		}
-
-		$Table = "T" . $Table;
-		
-		/* drop current full text on table */		
-		$RemDB->sql("if OBJECTPROPERTY(object_id('$Table'),'TableHasActiveFulltextIndex') = 1 exec sp_fulltext_table  N'[dbo].[$Table]', N'drop'");
-	
-		/*
-		 * must determin key name for Column C1
-		 */
-		$PK = $RemDB->GetRecordFromQuery("select k.constraint_name as PKName from information_schema.key_column_usage k,
-			information_schema.table_constraints tc 
-			where tc.constraint_name = k.constraint_name 
-			and tc.constraint_type = 'PRIMARY KEY' and k.table_name = '$Table'
-			and column_name = 'C1'");
-		$PKNAME = $PK->PKName;
-		if ($PKNAME == "") {
-			$msg .= "Unable to determine Primary Key name for $Table C1";
-		}
-		/* create new fulltext on table */
-		$RemDB->sql($a = "exec sp_fulltext_table N'[dbo].[$Table]', N'create', '$DBNAME', N'$PKNAME'");
-
-		/* choose columns to fulltext on */	
-		foreach ($Columns as $Column) {
-			$RemDB->sql("exec sp_fulltext_column N'[dbo].[$Table]', N'$Column', N'add', 1033");
-		}
-		
-		/* Activate it */
-		$RemDB->sql("exec sp_fulltext_table N'[dbo].[$Table]', N'activate'");	
-	}
-
-
-		
-	if ($_POST['RemedyFullTextBackground']) {
-		$RemDB->sql("Exec sp_fulltext_table '$HelpDeskTable', 'start_change_tracking'");
-		$RemDB->sql("Exec sp_fulltext_table '$HelpDeskTable', 'start_background_updateindex'");
-		if ($WorkLogTable) {
-			$RemDB->sql("Exec sp_fulltext_table '$WorkLogTable', 'start_change_tracking'");
-			$RemDB->sql("Exec sp_fulltext_table '$WorkLogTable', 'start_background_updateindex'");		
-			$RemDB->sql("Exec sp_fulltext_table '$KnownErrorTable', 'start_background_updateindex'");		
-			$RemDB->sql("Exec sp_fulltext_table '$KnownErrorWorkLogTable', 'start_background_updateindex'");		
-		}		
-		$msg .= "Remedy Full Text Catalog Background Population enabled";
-	}
-	else {
-		$msg = "Warning Remedy Background Full Text Population is not enabled.";
-		$RemDB->sql("Exec sp_fulltext_table '$HelpDeskTable', 'stop_change_tracking'");
-		$RemDB->sql("EXEC sp_fulltext_table '$HelpDeskTable', 'stop_background_updateindex'");
-		$RemDB->sql("EXEC sp_fulltext_table '$HelpDeskTable', 'start_full'");
-		$msg .= "Remedy Full Text Catalog Re-Population started";
-	}
-}
-
-
 function InitFullTextCatalog(&$msg)
 {
 	global $AppDB;
 	/* 
 	 * Enable Full Text Catalogs, first remove if already there.
 	 */
-	$AppDB->sql("exec sp_tableoption N'Articles', 'text in row', 'ON'");
-	$AppDB->sql("exec sp_tableoption N'ArticleAttachments', 'text in row', 'ON'");
+    //  no longer required with nvar(max)
+	//$AppDB->sql("exec sp_tableoption N'Articles', 'text in row', 'ON'");
+	//$AppDB->sql("exec sp_tableoption N'ArticleAttachments', 'text in row', 'ON'");
+
 	$AppDB->sql("if (select DATABASEPROPERTY('" . DBNAME . "', N'IsFullTextEnabled')) <> 1 exec sp_fulltext_database N'enable' ");	
 			
 	/* drop current */		
 	$AppDB->sql("if OBJECTPROPERTY(object_id('Articles'),'TableHasActiveFulltextIndex') = 1 exec sp_fulltext_table  N'[dbo].[Articles]', N'drop'");
 	$AppDB->sql("if OBJECTPROPERTY(object_id('ArticleAttachments'),'TableHasActiveFulltextIndex') = 1 exec sp_fulltext_table  N'[dbo].[ArticleAttachments]', N'drop'");
 
-
-//failed: exec sp_fulltext_column N'[dbo].[T1000]', N'C1000000984', N'add', 1033
-
-	
 	// Never actually remove the Catalog as some SQL installations do no allow recreating the catalog by the same name without
 	// first backing up the transaction log
 	// TODO: Look for work around (ie truncating log?) see msg below
@@ -439,38 +102,31 @@ function InitFullTextCatalog(&$msg)
 
 	$ID = 1;
 	
-	if ($_POST[InitCatalog] || $_POST['InitRemedyCatalog']) $_POST["Save"] = 1;
+	if (GetVar('InitCatalog')) $_POST["Save"] = 1;
 	
-	if ($_POST["Save"]) {
-		$ID = ProcessSave($ID,$rdonly,&$msg,&$Err);		
+	if (GetVar("Save")) {
+		$ID = ProcessSave($ID,$rdonly,$msg,$Err);		
 	}
 					
 	if ($ID) {
 		$F = $AppDB->get_record_assoc($ID,$Table);
 		if (!$F) {
-			$SETS[ID] = 1;
-			$SETS[AuthenticationMode] = "NTLM";
-			$SETS[PrivMode] = "Simple";
-			$SETS[SMTPServer] = "mail";
-			$SETS[AppName] = "Knowledge Base";
-			$SETS[SearchHistoryDays] = 30;
-			$SETS[HitsHistoryDays] = 400;
-			$SETS[DefaultSearchMode] = "English Query";
-			$SETS[Custom1Label] = "Custom1";
-			$SETS[Custom2Label] = "Custom2";
+			$SETS['ID'] = 1;
+			$SETS['AuthenticationMode'] = "NTLM";
+			$SETS['PrivMode'] = "Simple";
+			$SETS['SMTPServer'] = "mail";
+			$SETS['AppName'] = "Knowledge Base";
+			$SETS['SearchHistoryDays'] = 30;
+			$SETS['HitsHistoryDays'] = 400;
+			$SETS['DefaultSearchMode'] = "English Query";
+			$SETS['Custom1Label'] = "Custom1";
+			$SETS['Custom2Label'] = "Custom2";
 			$ID = $AppDB->insert_record($Table,$SETS);
 			$F = $AppDB->get_record_assoc($ID,$Table);
 		}
 		RecordToGlobals($F);
 	}
 	
-	if ($_POST) {
-		// keep reposted values, but strip slashes
-		repost_stripslashes();
-		if ($CopyToNew) {
-			$ID = $LASTMODIFIEDBY = $LASTMODIFIED = $CREATED = $CREATEDBY = "";
-		}
-	}
 	if ($DisplayNewCount == "") $DisplayNewCount = 10;
 	if ($DisplayViewedCount == "") $DisplayViewedCount = 10; 
 	if ($MaxUploadSize == "") $MaxUploadSize = 2;
@@ -499,7 +155,7 @@ function ParseForm(f)
 </script>
 <? include("header.php"); ?>
 <center>
-<form onSubmit="return ParseForm(this);" name=form action="<? echo $PHP_SELF ?>" method="post">
+<form onSubmit="return ParseForm(this);" name=form action="<? echo $_SERVER['PHP_SELF'] ?>" method="post">
 <? hidden("ID",$ID); 
 ?>
 <table width="100%" border=0 cellspacing=0 cellpadding=0><tr>
@@ -509,12 +165,12 @@ function ParseForm(f)
 </tr></table>
 <br>
 <?
- 	$Tabs = array("General","Options","Remedy Integration");
- 	$ActiveTab = ShowTabs3($Tabs,"General",$ClassPrefix="article-",0,"600px");
+ 	$Tabs = array("General","Options");
+ 	$ActiveTab = ShowTabs3($Tabs,"General",$ClassPrefix="article-",0,"700px");
 	$Tabn = 0; 
 	TabSectionStart($Tabs[$Tabn++],$ActiveTab);
 ?>
-    <table width="600px" cellpadding="0" cellspacing="0" class="tabtable">
+    <table width="700" cellpadding="0" cellspacing="0" class="tabtable">
         <tr>
           <td class="form-hdr">&nbsp;</td>
           <td class="form-data">&nbsp;</td>
@@ -578,7 +234,7 @@ function ParseForm(f)
     <? TabSectionEnd(); 
 		TabSectionStart($Tabs[$Tabn++],$ActiveTab);	  
 	  ?>
-    <table width="600px" cellpadding="0"  cellspacing="0" class="tabtable">
+    <table width="700" cellpadding="0"  cellspacing="0" class="tabtable">
         <tr>
           <td class="form-hdr">&nbsp;</td>
           <td class="form-data">&nbsp;</td>
@@ -647,68 +303,8 @@ function ParseForm(f)
           <td class="form-data">&nbsp;</td>
         </tr>
     </table>
-    <? TabSectionEnd(); 
-		TabSectionStart($Tabs[$Tabn++],$ActiveTab);	  
-	 ?>
-    <table width="600px" cellpadding="0" cellspacing="0" class="tabtable">
-        <tr>
-          <td class="form-hdr">&nbsp;</td>
-          <td class="form-data">&nbsp;</td>
-        </tr>
-        <tr>
-          <td class="form-hdr">Remedy AR Server</td>
-          <td class="form-data"><? DBField("$Table","RemedyARServer",$RemedyARServer); ?></td>
-        </tr>
-        <tr>
-          <td class="form-hdr">Remedy Database Server</td>
-          <td class="form-data"><? DBField("$Table","RemedyDBServer",$RemedyDBServer); ?></td>
-        </tr>			
-        <tr>
-          <td class="form-hdr">Help Desk Schema ID</td>
-          <td class="form-data"><? echo $AppDB->Settings->HelpDeskTable ?></td>
-        </tr>
-        <tr>
-          <td class="form-hdr">Help Desk WorkLog Schema ID</td>
-          <td class="form-data"><? echo $AppDB->Settings->HDWorkLogTable ?></td>
-        </tr>
-        <tr>
-          <td class="form-hdr">Known Error  Schema ID</td>
-          <td class="form-data"><? echo $AppDB->Settings->KnownErrorTable ?></td>
-        </tr>
-        <tr>
-          <td class="form-hdr">Known Error  WorkLog Schema ID</td>
-          <td class="form-data"><? echo $AppDB->Settings->KnownErrorWorkLogTable ?></td>
-        </tr>
-        <tr>
-          <td nowrap class="form-hdr">Background Full Text Population </td>
-          <td class="form-data"><? DBField("$Table","RemedyFullTextBackground",$RemedyFullTextBackground); ?>
-              <input onClick="return(confirm('This will remove and recreate the Remedy Full Text index. This may take some time to complete. Are you sure?'))" type="submit" name="InitRemedyCatalog" value="Initialize"></td>
-        </tr>
-        <tr>
-          <td class="form-hdr">&nbsp;</td>
-          <td class="form-data">&nbsp;</td>
-        </tr>
-        <tr>
-          <td class="form-hdr">&nbsp;</td>
-          <td class="form-data">&nbsp;</td>
-        </tr>
-        <tr>
-          <td colspan="2" class="form-hdr"><div align="left"><em>Currently only Remedy 6 or Remedy 7  HelpDesk running on Microsoft SQL Server is support</em>ed.</div></td>
-        </tr>
-        <tr>
-          <td class="form-hdr">&nbsp;</td>
-          <td class="form-data">&nbsp;</td>
-        </tr>
-        <tr>
-          <td class="form-hdr">&nbsp;</td>
-          <td class="form-data">&nbsp;</td>
-        </tr>
-        <tr>
-          <td class="form-hdr">&nbsp;</td>
-          <td class="form-data">&nbsp;</td>
-        </tr>			
-    </table>
-<? TabSectionEnd(); ?>
+    <? TabSectionEnd(); ?>
+		
      <table width="600px" cellpadding="0" cellspacing="0">
 		<tr>
           <td align="right" class="form-hdr">

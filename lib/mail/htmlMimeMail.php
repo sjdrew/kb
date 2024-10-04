@@ -84,12 +84,14 @@ class htmlMimeMail
     */
 	var $smtp_params;
 
+    var $errors;
+
 /**
 * Constructor function. Sets the headers
 * if supplied.
 */
 
-	function htmlMimeMail()
+	function __construct()
 	{
 		/**
         * Initialise some variables.
@@ -177,11 +179,11 @@ class htmlMimeMail
 	function setCrlf($crlf = "\n")
 	{
 		if (!defined('CRLF')) {
-			define('CRLF', $crlf, true);
+			define('CRLF', $crlf);
 		}
 
 		if (!defined('MAIL_MIMEPART_CRLF')) {
-			define('MAIL_MIMEPART_CRLF', $crlf, true);
+			define('MAIL_MIMEPART_CRLF', $crlf);
 		}
 	}
 
@@ -255,11 +257,35 @@ class htmlMimeMail
 	}
 
 /**
+ * Steve: added to encode per spec if utf8 in header item:
+ */    
+    function encodeIfUTF8($str) { 
+        if ($this->isUTF8($str)) {
+            $s = '=?utf-8?B?'.base64_encode($str).'?=';
+            return $s;
+        }
+        else return $str;
+    }
+    
+    function isUTF8($string) {
+
+        return preg_match('%(?:
+        [\xC2-\xDF][\x80-\xBF]        # non-overlong 2-byte
+        |\xE0[\xA0-\xBF][\x80-\xBF]               # excluding overlongs
+        |[\xE1-\xEC\xEE\xEF][\x80-\xBF]{2}      # straight 3-byte
+        |\xED[\x80-\x9F][\x80-\xBF]               # excluding surrogates
+        |\xF0[\x90-\xBF][\x80-\xBF]{2}    # planes 1-3
+        |[\xF1-\xF3][\x80-\xBF]{3}                  # planes 4-15
+        |\xF4[\x80-\x8F][\x80-\xBF]{2}    # plane 16
+        )+%xs', $string);
+    }
+    
+/**
 * Accessor to add a Subject: header
 */
 	function setSubject($subject)
 	{
-		$this->headers['Subject'] = $subject;
+		$this->headers['Subject'] = $this->encodeIfUTF8($subject);
 	}
 
 /**
@@ -267,6 +293,13 @@ class htmlMimeMail
 */
 	function setFrom($from)
 	{
+        if ($this->isUTF8($from)) {
+            // if contains name, ie "My name" <email@domain.com>  only encode the My Name otherwise breaks message.
+            $parts = explode('"',$from);
+            if (count($parts) > 1) {
+                $from = $this->encodeIfUTF8($parts[1]) . $parts[2];
+            }
+        }
 		$this->headers['From'] = $from;
 	}
 
@@ -332,7 +365,7 @@ class htmlMimeMail
 	function _findHtmlImages($images_dir)
 	{
 		// Build the list of image extensions
-		while (list($key,) = each($this->image_types)) {
+        foreach($this->image_types as $key => $val) {
 			$extensions[] = $key;
 		}
 
@@ -353,7 +386,7 @@ class htmlMimeMail
 	
 			for ($i=0; $i<count($html_images); $i++) {
 				if ($image = $this->getFile($images_dir.$html_images[$i])) {
-					$ext = substr($html_images[$i], strrpos($html_images[$i], '.') + 1);
+					$ext = substr((string)$html_images[$i], strrpos($html_images[$i], '.') + 1);
 					$content_type = $this->image_types[strtolower($ext)];
 					$this->addHtmlImage($image, basename($html_images[$i]), $content_type);
 				}
@@ -392,7 +425,7 @@ class htmlMimeMail
 /**
 * Adds a text subpart to a mime_part object
 */
-	function &_addTextPart(&$obj, $text)
+	function _addTextPart(&$obj, $text)
 	{
 		$params['content_type'] = 'text/plain';
 		$params['encoding']     = $this->build_params['text_encoding'];
@@ -407,7 +440,7 @@ class htmlMimeMail
 /**
 * Adds a html subpart to a mime_part object
 */
-	function &_addHtmlPart(&$obj)
+	function _addHtmlPart(&$obj)
 	{
 		$params['content_type'] = 'text/html';
 		$params['encoding']     = $this->build_params['html_encoding'];
@@ -422,7 +455,7 @@ class htmlMimeMail
 /**
 * Starts a message with a mixed part
 */
-	function &_addMixedPart()
+	function _addMixedPart()
 	{
 		$params['content_type'] = 'multipart/mixed';
 		return new Mail_mimePart('', $params);
@@ -431,7 +464,7 @@ class htmlMimeMail
 /**
 * Adds an alternative part to a mime_part object
 */
-	function &_addAlternativePart(&$obj)
+	function _addAlternativePart(&$obj)
 	{
 		$params['content_type'] = 'multipart/alternative';
 		if (is_object($obj)) {
@@ -444,7 +477,7 @@ class htmlMimeMail
 /**
 * Adds a html subpart to a mime_part object
 */
-	function &_addRelatedPart(&$obj)
+	function _addRelatedPart(&$obj)
 	{
 		$params['content_type'] = 'multipart/related';
 		if (is_object($obj)) {
@@ -457,7 +490,7 @@ class htmlMimeMail
 /**
 * Adds an html image subpart to a mime_part object
 */
-	function &_addHtmlImagePart(&$obj, $value)
+	function _addHtmlImagePart(&$obj, $value)
 	{
 		$params['content_type'] = $value['c_type'];
 		$params['encoding']     = 'base64';
@@ -470,7 +503,7 @@ class htmlMimeMail
 /**
 * Adds an attachment subpart to a mime_part object
 */
-	function &_addAttachmentPart(&$obj, $value)
+	function _addAttachmentPart(&$obj, $value)
 	{
 		$params['content_type'] = $value['c_type'];
 		$params['encoding']     = $value['encoding'];
@@ -503,7 +536,7 @@ class htmlMimeMail
 	function buildMessage($params = array())
 	{
 		if (!empty($params)) {
-			while (list($key, $value) = each($params)) {
+			foreach($params as $key => $value) {
 				$this->build_params[$key] = $value;
 			}
 		}
@@ -522,11 +555,11 @@ class htmlMimeMail
 
 		switch (true) {
 			case $text AND !$attachments:
-				$message = &$this->_addTextPart($null, $this->text);
+				$message = $this->_addTextPart($null, $this->text);
 				break;
 
 			case !$text AND $attachments AND !$html:
-				$message = &$this->_addMixedPart();
+				$message = $this->_addMixedPart();
 
 				for ($i=0; $i<count($this->attachments); $i++) {
 					$this->_addAttachmentPart($message, $this->attachments[$i]);
@@ -534,7 +567,7 @@ class htmlMimeMail
 				break;
 
 			case $text AND $attachments:
-				$message = &$this->_addMixedPart();
+				$message = $this->_addMixedPart();
 				$this->_addTextPart($message, $this->text);
 
 				for ($i=0; $i<count($this->attachments); $i++) {
@@ -544,22 +577,22 @@ class htmlMimeMail
 
 			case $html AND !$attachments AND !$html_images:
 				if (!is_null($this->html_text)) {
-					$message = &$this->_addAlternativePart($null);
+					$message = $this->_addAlternativePart($null);
 					$this->_addTextPart($message, $this->html_text);
 					$this->_addHtmlPart($message);
 				} else {
-					$message = &$this->_addHtmlPart($null);
+					$message = $this->_addHtmlPart($null);
 				}
 				break;
 
 			case $html AND !$attachments AND $html_images:
 				if (!is_null($this->html_text)) {
-					$message = &$this->_addAlternativePart($null);
+					$message = $this->_addAlternativePart($null);
 					$this->_addTextPart($message, $this->html_text);
-					$related = &$this->_addRelatedPart($message);
+					$related = $this->_addRelatedPart($message);
 				} else {
-					$message = &$this->_addRelatedPart($null);
-					$related = &$message;
+					$message = $this->_addRelatedPart($null);
+					$related = $message;
 				}
 				$this->_addHtmlPart($related);
 				for ($i=0; $i<count($this->html_images); $i++) {
@@ -568,9 +601,9 @@ class htmlMimeMail
 				break;
 
 			case $html AND $attachments AND !$html_images:
-				$message = &$this->_addMixedPart();
+				$message = $this->_addMixedPart();
 				if (!is_null($this->html_text)) {
-					$alt = &$this->_addAlternativePart($message);
+					$alt = $this->_addAlternativePart($message);
 					$this->_addTextPart($alt, $this->html_text);
 					$this->_addHtmlPart($alt);
 				} else {
@@ -582,13 +615,13 @@ class htmlMimeMail
 				break;
 
 			case $html AND $attachments AND $html_images:
-				$message = &$this->_addMixedPart();
+				$message = $this->_addMixedPart();
 				if (!is_null($this->html_text)) {
-					$alt = &$this->_addAlternativePart($message);
+					$alt = $this->_addAlternativePart($message);
 					$this->_addTextPart($alt, $this->html_text);
-					$rel = &$this->_addRelatedPart($alt);
+					$rel = $this->_addRelatedPart($alt);
 				} else {
-					$rel = &$this->_addRelatedPart($message);
+					$rel = $this->_addRelatedPart($message);
 				}
 				$this->_addHtmlPart($rel);
 				for ($i=0; $i<count($this->html_images); $i++) {
@@ -608,7 +641,11 @@ class htmlMimeMail
 
 			// Add message ID header
 			srand((double)microtime()*10000000);
-			$message_id = sprintf('<%s.%s@%s>', base_convert(time(), 10, 36), base_convert(rand(), 10, 36), !empty($GLOBALS['HTTP_SERVER_VARS']['HTTP_HOST']) ? $GLOBALS['HTTP_SERVER_VARS']['HTTP_HOST'] : $GLOBALS['HTTP_SERVER_VARS']['SERVER_NAME']);
+            $fqdn =  gethostbyaddr('127.0.1.1'); // sjd Steve - fix so works in CLI mode as well  
+            if ($fqdn == '127.0.0.1') {
+                $fqdn = gethostname();
+            }       
+			$message_id = sprintf('<%s.%s@%s>', base_convert(time(), 10, 36), base_convert(rand(), 10, 36),$fqdn);   
 			$this->headers['Message-ID'] = $message_id;
 
 			$this->is_built = true;
@@ -626,7 +663,10 @@ class htmlMimeMail
 	{
 		preg_match_all('/(\w*[\x80-\xFF]+\w*)/', $input, $matches);
 		foreach ($matches[1] as $value) {
-			$replacement = preg_replace('/([\x80-\xFF])/e', '"=" . strtoupper(dechex(ord("\1")))', $value);
+			//$replacement = preg_replace('/([\x80-\xFF])/e', '"=" . strtoupper(dechex(ord("\1")))', $value);
+            $replacement = preg_replace_callback('/([\x80-\xFF])/', function($m) {
+                                return "=" . strtoupper(dechex(ord($m[1])));
+                        },$value);
 			$input = str_replace($value, '=?' . $charset . '?Q?' . $replacement . '?=', $input);
 		}
 		
@@ -642,10 +682,6 @@ class htmlMimeMail
 */
 	function send($recipients, $type = 'mail')
 	{
-		// In TEST override_recipients so it does not send emails to everyone:
-		$recipients = array("Vojtech.Navratil@cnrl.com");
-        // --------------------------------------		
-		
 		if (!defined('CRLF')) {
 			$this->setCrlf($type == 'mail' ? "\n" : "\r\n");
 		}
@@ -662,17 +698,20 @@ class htmlMimeMail
 					unset($this->headers['Subject']);
 				}
 
+                //sjd dont include the bad msg id as missing domain info and let mail system
+                // add it properly.
+                unset($this->headers['Message-ID']);
+
 				// Get flat representation of headers
 				foreach ($this->headers as $name => $value) {
 					$headers[] = $name . ': ' . $this->_encodeHeader($value, $this->build_params['head_charset']);
 				}
 
 				$to = $this->_encodeHeader(implode(', ', $recipients), $this->build_params['head_charset']);
-
 				if (!empty($this->return_path)) {
-					$result = mail($to, $subject, $this->output, implode(CRLF, $headers), '-f' . $this->return_path);
+					$result = @mail($to, $subject, $this->output, implode(CRLF, $headers), '-f' . $this->return_path);
 				} else {
-					$result = mail($to, $subject, $this->output, implode(CRLF, $headers));
+					$result = @mail($to, $subject, $this->output, implode(CRLF, $headers));
 				}
 				
 				// Reset the subject in case mail is resent
@@ -687,11 +726,15 @@ class htmlMimeMail
 			case 'smtp':
 				require_once(dirname(__FILE__) . '/smtp.php');
 				require_once(dirname(__FILE__) . '/RFC822.php');
-				$smtp = &smtp::connect($this->smtp_params);
+				$smtp = new smtp($this->smtp_params);
+                if (!$smtp->connect()) {
+                    return false;
+                }
+                $parser = new Mail_RFC822();
 				
 				// Parse recipients argument for internet addresses
 				foreach ($recipients as $recipient) {
-					$addresses = Mail_RFC822::parseAddressList($recipient, $this->smtp_params['helo'], null, false);
+					$addresses = $parser->parseAddressList($recipient, $this->smtp_params['helo'], null, false);
 					foreach ($addresses as $address) {
 						$smtp_recipients[] = sprintf('%s@%s', $address->mailbox, $address->host);
 					}
@@ -703,7 +746,7 @@ class htmlMimeMail
 				// Cc and Bcc as we go
 				foreach ($this->headers as $name => $value) {
 					if ($name == 'Cc' OR $name == 'Bcc') {
-						$addresses = Mail_RFC822::parseAddressList($value, $this->smtp_params['helo'], null, false);
+						$addresses = $parser->parseAddressList($value, $this->smtp_params['helo'], null, false);
 						foreach ($addresses as $address) {
 							$smtp_recipients[] = sprintf('%s@%s', $address->mailbox, $address->host);
 						}
@@ -725,7 +768,7 @@ class htmlMimeMail
 				if (isset($this->return_path)) {
 					$send_params['from'] = $this->return_path;
 				} elseif (!empty($this->headers['From'])) {
-					$from = Mail_RFC822::parseAddressList($this->headers['From']);
+					$from = $parser->parseAddressList($this->headers['From']);
 					$send_params['from'] = sprintf('%s@%s', $from[0]->mailbox, $from[0]->host);
 				} else {
 					$send_params['from'] = 'postmaster@' . $this->smtp_params['helo'];
@@ -754,7 +797,7 @@ class htmlMimeMail
 		$this->setHeader('Date', date('D, d M y H:i:s O'));
 
 		if (!defined('CRLF')) {
-			$this->setCrlf($type == 'mail' ? "\n" : "\r\n");
+			$this->setCrlf("\r\n");
 		}
 
 		if (!$this->is_built) {
@@ -775,4 +818,3 @@ class htmlMimeMail
 		return implode(CRLF, $headers) . CRLF . CRLF . $this->output;
 	}
 } // End of class.
-?>

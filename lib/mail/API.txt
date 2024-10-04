@@ -1,6 +1,5 @@
 
    API docs
-   ¯¯¯¯¯¯¯¯
 
 Only public methods are documented. All properties are considered private except for
 is_built, which is a boolean and determines whether the message is built or not. This

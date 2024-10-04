@@ -1,4 +1,4 @@
-<script language="php">
+<?php
 
 /**
  * Image Routines
@@ -74,6 +74,3 @@ function GenerateThumb($Filename,$Contents,$thumbSize = 160)
 	}
 
 }
-
-
-</script>

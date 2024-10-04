@@ -39,7 +39,7 @@ function WriteHTML($html)
 		{
 			//Tag
 			if($e{0}=='/')
-				$this->CloseTag(strtoupper(substr($e,1)));
+				$this->CloseTag(strtoupper(substr((string)$e,1)));
 			else
 			{
 				//Extract attributes

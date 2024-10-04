@@ -16,7 +16,7 @@ function CalHeader($name, $editable=1, $MonthNameFormat=0,$x=40,$y=20,$showtime=
 	if (!$editable) {
 		return;
 	}
-	echo('<Script language="Javascript" SRC="date.js"></script>');
+	echo('<script language="Javascript" SRC="lib/date.js"></script>');
 	echo("<script lanaguage=javascript>\n");
 	if ($windowmode) {
 		echo('var '.$name.'_Cal = new CalendarPopup();'."\n");
@@ -50,10 +50,9 @@ function CalPopup($name, $editable, $value, $style, $size=14)
 		echo($value);
 		return;
 	}
-	if (strlen($value) > $size) $value=substr($value,0,$size);
+	if (strlen((string)$value) > $size) $value=substr((string)$value,0,$size);
 	
 	echo("<input type=\"text\" name=\"$name\" class=\"$style\" value=\"$value\" size=\"$size\" >&nbsp;");
 	echo('<a href="#" name="'. $name .'_anchor" id="'.$name.'_anchor" onClick="'.$name.'_Cal.select(FindParentForm(this).' . $name .',\''.$name.'_anchor\',\'yyyy-MM-dd\');return false;" ><img border="0" src="images/calendar.gif" style="text-indent: 0; word-spacing: 0; margin: 0" align="top" ></a><DIV ID="'.$name.'_Div" Name="'.$name.'_Div" STYLE="position:absolute;visibility:hidden;background-color:white;layer-background-color:white;"></DIV>');
 	echo('<input type=hidden name="'.$name."v\" >\n");
 }
-?>

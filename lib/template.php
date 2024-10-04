@@ -23,7 +23,7 @@ class template
          
         foreach ($this->vars as $var => $content) 
         { 
-            $file_content = str_replace('{' . $var . '}', $content, $file_content); 
+            $file_content = str_replace('{' . $var . '}', (string)$content, $file_content); 
         } 
         return $file_content; 
     } 

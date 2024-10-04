@@ -1,10 +1,18 @@
 <? include("config.php");
-   include("graph/jpgraph.php");
-   include("graph/jpgraph_bar.php");
-   include("graph/jpgraph_line.php");
-     
-   RequirePriv(PRIV_APPROVER);
+   RequirePriv(PRIV_ADMIN);
+   $Table = "Activity";
+
+   $Export = GetVar('Export');
+   $S = GetVar('S');
+   $Search = GetVar('Search');
+   $CREATEDBY = GetVar('CREATEDBY');
+   $CREATED = GetVar('CREATED');
+   $StartDate = GetVar('StartDate');
+   $EndDate = GetVar('EndDate');
+
+   if (!$Export) {
 ?>
+
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
@@ -14,167 +22,130 @@
 </head>
 <body>
 <SCRIPT LANGUAGE="JavaScript" SRC="lib/misc.js"></SCRIPT>
+<script LANGUAGE="JavaScript" SRC="lib/date.js"></script>
+<script LANGUAGE="JavaScript" SRC="lib/AnchorPosition.js"></script>
+<script LANGUAGE="JavaScript" SRC="lib/PopupWindow.js"></script>
+<script LANGUAGE="JavaScript" SRC="lib/CalendarPopup.js"></script>
+<? include("header.php");  ?>
 
-<? include("header.php"); ?>
-
-<div align="center">
-<br><br>
-
-<?
-function bar_chart($file,$datax,$data_y1,$data_y2,$title,$xtitle,$ytitle,$targs = "",$alts = "")
+<script language="JavaScript">
+function parse()
 {
-	DEFINE("GRAPH_FONT",FF_ARIAL);  
-	DEFINE("GRAPH_FONT_TITLE",FF_ARIAL);
-	
-	DEFINE("FONT_SMALL",ttf_size(11));
-	DEFINE("FONT_MED",ttf_size(12));
-	DEFINE("FONT_MEDL",ttf_size(13)); 
-	DEFINE("FONT_LARGE",ttf_size(15)); 
+	if (!CheckDate(form.StartDate)) return false;
+	if (!CheckDate(form.EndDate)) return false;
+	return true;
+}
+function ListExport() { return DoListExport(); }
+</script>
+<div align="center">
+<br>
+<form onSubmit="return parse()" method="Get" name="form" Action="<? echo $_SERVER['PHP_SELF'] ?>">
+<?
+} 
+if ($S) {
 
-	// Setup the graph. 
-	$tsize = 15;  // Font size for the title
-	$title_lines = 1;
-	if (strlen($title) > 60) $tsize = 14.5;
-	if (strlen($title) > 80) $tsize = 14;
-	if (strlen($title) > 100) {
-		$tsize = 15;
-		$title = wordwrap($title,88,"\n");
-		$title_lines = substr_count($title,"\n");
+	if (!$Export) hidden("S",$S);
+	$Fields["Date"] = ":nowrap";
+	$Fields["Name"] = "";
+	$Fields["Activity"] = "";
+	$Fields["ItemID"] = "";
+	$Fields["Details"] = "";
+	
+	$Sort = GetVar("Sort");
+	if ($Sort == "")
+		$Sort = "Date desc";
+	
+	$UserID = GetVar("UserID");
+	if ($UserID) {
+		$q2 .= " AND " . USERS_TABLE . ".ID=$UserID ";
+	}
+    $CREATEDBY = GetVar('CreatedBy');
+	if (trim((string)$CREATEDBY)) {
+		$q2 .= " AND $Table.CREATEDBY = '$CREATEDBY'";
+		$str .= " by user Account $CREATEDBY";
+	}
+    $StartDate = GetVar('StartDate');
+	if (trim((string)$StartDate)) {
+		$q2 .= " and $Table.CREATED >= '$StartDate'";
+		if (!trim((string)$EndDate)) $str .= " Since $StartDate";
+	}
+    $EndDate = GetVar('EndDate');
+	if (trim((string)$EndDate)) {
+		$q2 .= " and $Table.CREATED < '$EndDate'";
+		if (trim((string)$StartDate)) $str .= " for the Period of $StartDate to $EndDate ";
+		else $str .= " before $EndDate";
+	}
+    $ItemID = GetVar('ItemID');
+	if ($ItemID) {
+		if (strtoupper(substr((string)$ItemID,0,2)) == "KB") {
+			$ItemID = substr((string)$ItemID,2);
+		}
+		$ItemID = (int)$ItemID;
+		if ($ItemID > 0) {
+			$q2 = " AND ($Table.Tbl = 'Articles' AND $Table.ItemID = $ItemID) ";
+			$str = " for Article " .  fmt_kb($ItemID);
+		}
 	}	
-	$graph = new Graph(700,320 + ($title_lines * 12),"auto");
-	$graph->img->SetMargin(80,25,18 + ($title_lines * 12),40);
-	
-	$graph->SetScale("textlin");
-	$graph->SetMarginColor("#F0F0F0");
-	$graph->SetShadow();
-
-	// Create the bar pot
-	$bplot = new BarPlot($data_y1);
-	$bplot->SetWidth(0.6);
-	$bplot->SetLegend("Article Hits");
-
-	// Create the line plot
-	$lplot = new LinePlot($data_y2);
-	//$lplot->SetAlign("center");
-	$lplot->SetColor("red");
-	$lplot->SetLegend("Searches");
-	
-	$graph->img->SetMargin(40,140,40,80);
-	
-	$graph->legend->Pos(0.03,0.5,"right","center");
-	
-
-	// Create targets for the image maps. One for each column
-	if ($targs) {
-		$bplot->SetCSIMTargets($targs,$alts);
-	}
-	
-	// Setup color for gradient fill style 
-	$bplot->SetFillGradient("navy","lightsteelblue",GRAD_HOR);
-	$bplot->SetColor("navy");
-	
-	$graph->Add($bplot);
-	$graph->Add($lplot);
-
-	// Set up the title for the graph
-	$graph->title->Set(stripslashes($title));
-	$graph->title->SetMargin(8);
-	$graph->title->SetColor("black");
-	$graph->title->SetFont(GRAPH_FONT,FS_BOLD,ttf_size($tsize));
-
-	// Setup font for y axis
-	//$graph->yaxis->SetColor("black",GRAPH_LABEL_COLOR);
-	$graph->yaxis->SetFont(GRAPH_FONT,FS_NORMAL,FONT_SMALL);
-	$graph->yaxis->title->Set($ytitle);
-	//$graph->yaxis->title->SetFont(GRAPH_FONT,FS_BOLD,FONT_SMALL);
-
-	// Setup X-axis title (color & font)
-	//$graph->xaxis->SetColor("black",GRAPH_LABEL_COLOR);
-	$graph->xaxis->SetFont(GRAPH_FONT,FS_NORMAL,FONT_SMALL);
-	$graph->xaxis->title->Set($xtitle);
-	//$graph->xaxis->title->SetColor(GRAPH_LABEL_COLOR);
-	//$graph->xaxis->title->SetFont(GRAPH_FONT,FS_BOLD,FONT_SMALL);
-	
-	$graph->xaxis->SetTickLabels($datax);
-	if (count($datax) > 25) {
-		$graph->xaxis->SetTextLabelInterval(2);
-	}
-	
-	$graph->Stroke(APP_ROOT_DIR . $file);   
-
-	if ($targs) {
-		echo $graph->GetHTMLImageMap("imap");
-	}
-}
-
-$file = graph_file("activity");
-
-if ($month == "") $month = date("m");
-if ($year == "") $year = date("Y");
-
-$s_month = $month;
-$s_year = $year;
-
-$date_start = $year . "-" . $month . "-01";
-$t = mktime(2,0,0,$month,1,$year);
-$month_name = date("M",$t);
-++$month;
-if ($month > 12) { $month = 1; $year++; }
-$date_end = $year . "-" . $month . "-01";
-
-$n_month = $p_month = $s_month;
-$n_year = $p_year = $s_year;
-
-++$n_month;
-
-if ($n_month > 12) { $n_month = 1; $n_year++; }
-$cur_month = date("m");
-if ($n_month > $cur_month && $n_year >= date("Y")) $n_month = 0;
-
---$p_month;
-if ($p_month < 1) { $p_month = 12; --$p_year; }
-
-$q = "select count(*) as Count,datepart(day,CREATED) as Day from Hits " .
-     "where CREATED >= '". $date_start ."' and CREATED < '" . $date_end . "' group by datepart(day,CREATED) order by Day";
-
-$res = $AppDB->sql($q);
-$min_day=28;
-while($R = $AppDB->sql_fetch_obj($res)) {
-		$data_hits[$R->Day] = $R->Count;
-		$max_day = max($max_day,$R->Day);
-		$min_day = min($min_day,$R->Day);
-}	  
-
-$q = "select count(*) as Count,datepart(day,CREATED) as Day from Searches " .
-     "where CREATED >= '". $date_start ."' and CREATED < '" . $date_end . "' group by datepart(day,CREATED) order by Day";
-
-$res = $AppDB->sql($q);
-while($R = $AppDB->sql_fetch_obj($res)) {
-		$data_searches[$R->Day] = $R->Count;
-		$max_day = max($max_day,$R->Day);
-		$min_day = min($min_day,$R->Day);
-}
-
-$data_y1 = array();
-$data_y2 = array();
-if ($min_day >= $max_day) $min_day = $max_day - 1;
-for($i = $min_day; $i < $max_day + 1; ++$i) {
-	$data_y1[] = $data_hits[$i];
-	$data_y2[] = $data_searches[$i];
-	$datax[] = $i;
-}
-bar_chart($file,$datax,$data_y1,$data_y2,"KB Activity for $month_name $year","Day","Article Hits");
-
+ 	
+	$q = "select Activity.CREATED as Date,Activity.CREATEDBY,ItemID,Activity,Tbl,FirstName + ' ' + LastName as Name
+		,ISNULL((select Search from Searches where Activity.Tbl = 'Searches' AND ID = Activity.ItemID),
+			ISNULL((select Title from Articles where Activity.Tbl = 'Articles' AND ID = Activity.ItemID),
+                (select Subject from Messages where Activity.Tbl = 'Messages' AND ID = Activity.ItemID))) as Details 
+				  FROM Activity  
+				    left join " . USERS_TABLE . " on Activity.CREATEDBY = " . USERS_TABLE . ".Username  
+						where 1=1 " . $q2 ;
+						
+	$LB = new ListBoxPref("Activity Log $str",$AppDB,$q,$Fields,$Sort,"",'',1);
+	$LB->width="90%";
+	$LB->CmdBar=1;
+	$LB->Export=$Export;
+	$LB->Display();
 ?>
 
-<img src="<? echo $file ?>" border=0>
 <table border="0" cellspacing="0" cellpadding="8" width="90%"><tr><td align="left">
-<button onClick="window.location='admin_reports.php'">Back</button>
-<button onClick="window.location='<? echo $PHP_SELF . "?month=$p_month&year=$p_year"?>'">&lt;&lt; Previous Month</button>
-<button <? if ($n_month == 0) echo "disabled" ?> onClick="window.location='<? echo $PHP_SELF . "?month=$n_month&year=$n_year"?>'">Next Month &gt;&gt;</button>
+<? $BackLoc = str_replace("S=Search","S=",$_SERVER['REQUEST_URI']);
+   $BackLoc = str_replace("S=1","S=",$BackLoc);
+?>
+<button onClick="window.location='<? echo $BackLoc ?>'">Back</button>
 </td></tr></table>
+<? } else { 
+	$ID = GetVar("ID");
+?>
+	 <div class="shadowboxfloat">
+          <div class="shadowcontent">
+            <table <? echo $FORM_STYLE ?> width="500"  >
+                <tr>
+                  <td height="30" colspan="3" class="normal"><strong>Activity Log Report:</strong></td>
+                </tr>				
+                <tr>
+                  <td rowspan="5" width="14%" align="right"><img src="images/search.gif" ></td>
+                  <td align="right" nowrap class="form-hdr">Starting Date: </td>
+                  <td class="form-data"><?	DBField($Table,"StartDate",$StartDate);?></td>
+                </tr>
+                <tr>
+                  <td align="right" nowrap class="form-hdr">Ending Date: </td>
+                  <td class="form-data"><? DBField($Table,"EndDate",$EndDate); ?></td>
+                </tr>
+                <tr>
+                  <td WIDTH="24%" align="right" nowrap class="form-hdr"> Article ID:</td>
+                  <td WIDTH="62%" class="form-data"><? DBField($Table,"ItemID",$ItemID); ?></td>
+                </tr>				
+			    <tr>
+			      <td align="right" class="form-hdr">Account ID:</td>
+			      <td class="form-data"><? DBField($Table,"Account",$CREATEDBY); ?>&nbsp;</td>
+ 		       </tr>				
+                <tr>
+				<td align="right" colspan=3 class="form-data">
+				  <input type="submit" VALUE="Search" NAME="S">
+				  <input onClick="Javascript:window.location='admin_reports.php'" type="button" VALUE="Back" NAME="Back">
+				  <?  HelpButton()  ?>
+                </td>
+              </tr>
+             </table>
+	</div></div>
+<? } ?>
+</form>
 </div>
-
 </body>
 
 </html>

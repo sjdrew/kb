@@ -7,7 +7,7 @@ define("LDAP_ACCOUNT",'CNRLCGY1\ISPortal_AD_View');
 define("LDAP_PASSWORD",'2levelappr');
 define("LDAP_GROUP_PREFIX","04_KB_");
 
-if ($_GET['LDAP_TEST']) {
+if (isset($_GET['LDAP_TEST'])) {
 
 	echo "<pre>";
 	echo "All KB Groups:\n";
@@ -71,9 +71,9 @@ function AD_Group_Sync(&$msg)
 	$Groups = array();
 	foreach($ADGroups as $ADGroup) {	
 		$tpos = strrpos($ADGroup,'_');
-		$Perm = trim(substr($ADGroup,$tpos+1));
-		$GroupName = trim(substr($ADGroup,0,$tpos));
-		$GroupName = substr($GroupName,strlen(LDAP_GROUP_PREFIX));
+		$Perm = trim(substr((string)$ADGroup,$tpos+1));
+		$GroupName = trim(substr((string)$ADGroup,0,$tpos));
+		$GroupName = substr((string)$GroupName,strlen(LDAP_GROUP_PREFIX));
 		$Groups[] = $GroupName;		
 	}
 	if (count($Groups) == 0) {
@@ -185,10 +185,10 @@ function LDAPGetGroups($GroupSearch,$Prefix='')
 			$data = $info[$item][$attribute];
 			$Group = $info[$item][$data][0];
 			if ($Prefix) {
-				if (substr($Group,0,strlen($Prefix)) != $Prefix) {
+				if (substr((string)$Group,0,strlen((string)$Prefix)) != $Prefix) {
 					continue;
 				}
-				$Group = substr($Group,strlen($Prefix));
+				$Group = substr((string)$Group,strlen((string)$Prefix));
 			}
 			$Groups[] = $Group;
 		}
@@ -220,12 +220,12 @@ function LDAPGetUsersGroups($UserID,$Prefix='')
 			for ($jj=0; $jj<$total; $jj++) {
 				$GroupCN = $info[$i][$data][$jj];
 				$s = explode(',',$GroupCN);
-				$Group = str_replace('\\','',substr($s[0],3));
+				$Group = str_replace('\\','',substr((string)$s[0],3));
 				if ($Prefix) {
-					if (substr($Group,0,strlen($Prefix)) != $Prefix) {
+					if (substr((string)$Group,0,strlen((string)$Prefix)) != $Prefix) {
 						continue;
 					}
-					$Group = substr($Group,strlen($Prefix));
+					$Group = substr((string)$Group,strlen((string)$Prefix));
 				}
 				$Groups[] = $Group;
 			}

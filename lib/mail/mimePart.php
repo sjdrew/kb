@@ -123,7 +123,7 @@ class Mail_mimePart {
      *                  charset      - Character set to use
      * @access public
      */
-    function Mail_mimePart($body = '', $params = array())
+    function __construct($body = '', $params = array())
     {
         if (!defined('MAIL_MIMEPART_CRLF')) {
             define('MAIL_MIMEPART_CRLF', defined('MAIL_MIME_CRLF') ? MAIL_MIME_CRLF : "\r\n", TRUE);
@@ -245,7 +245,7 @@ class Mail_mimePart {
      *         otherwise you will not be able to add further subparts.
      * @access public
      */
-    function &addSubPart($body, $params)
+    function addSubPart($body, $params)
     {
         $this->_subparts[] = new Mail_mimePart($body, $params);
         return $this->_subparts[count($this->_subparts) - 1];
@@ -300,25 +300,27 @@ class Mail_mimePart {
         $escape = '=';
         $output = '';
 
-        while(list(, $line) = each($lines)){
+        foreach($lines as $line) {
 
-            $linlen     = strlen($line);
+            $linlen     = strlen((string)$line);
             $newline = '';
 
             for ($i = 0; $i < $linlen; $i++) {
-                $char = substr($line, $i, 1);
+                $char = substr((string)$line, $i, 1);
                 $dec  = ord($char);
 
                 if (($dec == 32) AND ($i == ($linlen - 1))){    // convert space at eol only
                     $char = '=20';
 
+                } elseif(($dec == 9) AND ($i == ($linlen - 1))) {  // convert tab at eol only
+                    $char = '=09';
                 } elseif($dec == 9) {
                     ; // Do nothing if a tab.
                 } elseif(($dec == 61) OR ($dec < 32 ) OR ($dec > 126)) {
                     $char = $escape . strtoupper(sprintf('%02s', dechex($dec)));
                 }
 
-                if ((strlen($newline) + strlen($char)) >= $line_max) {        // MAIL_MIMEPART_CRLF is not counted
+                if ((strlen((string)$newline) + strlen((string)$char)) >= $line_max) {        // MAIL_MIMEPART_CRLF is not counted
                     $output  .= $newline . $escape . $eol;                    // soft line break; " =\r\n" is okay
                     $newline  = '';
                 }
@@ -326,8 +328,7 @@ class Mail_mimePart {
             } // end of for
             $output .= $newline . $eol;
         }
-        $output = substr($output, 0, -1 * strlen($eol)); // Don't want last crlf
+        $output = substr((string)$output, 0, -1 * strlen((string)$eol)); // Don't want last crlf
         return $output;
     }
 } // End of class
-?>

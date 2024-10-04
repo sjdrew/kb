@@ -1,5 +1,8 @@
 <? 
 	include("config.php"); 
+    
+    $ArticleID = GetVar('ArticleID');
+    $printview = GetVar('printview');
 ?>
 <html>
 	
@@ -11,7 +14,7 @@
 <body class="DialogBody">
 
 <center>
-<form name="form" enctype="multipart/form-data" action="<?  echo $PHP_SELF ?>" method="post">
+<form name="form" enctype="multipart/form-data" action="<?  echo $_SERVER['PHP_SELF'] ?>" method="post">
 <? hidden("ArticleID",$ArticleID); 
 	hidden("DeleteNoteID","");
 ?>

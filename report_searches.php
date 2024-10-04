@@ -1,6 +1,15 @@
 <? 	include("config.php");
    	RequirePriv(PRIV_ADMIN);
 	$Table = "Searches";
+
+    $Export = GetVar('Export');
+    $S = GetVar('S');
+    $Search = GetVar('Search');
+    $CREATEDBY = GetVar('CREATEDBY');
+    $CREATED = GetVar('CREATED');
+    $StartDate = GetVar('StartDate');
+    $EndDate = GetVar('EndDate');
+
 	if (!$Export) { 
 ?>
 
@@ -30,7 +39,7 @@ function ListExport() { return DoListExport(); }
 </script>
 <div align="center">
 <br>
-<form onSubmit="return parse()" method="Get" name="form" Action="<? echo $PHP_SELF ?>">
+<form onSubmit="return parse()" method="Get" name="form" Action="<? echo $_SERVER['PHP_SELF'] ?>">
 <? 
 }
 
@@ -40,8 +49,8 @@ if ($S) {
 
 	$q = "Select $Table.*,$Table.CREATED as Date, FirstName + ' ' + LastName as Name from $Table left join " . USERS_TABLE . " on $Table.CREATEDBY = " . USERS_TABLE . ".[Username] where 1=1 ";
 	
-	if (trim($Search)) {
-		$Search = str_replace('"',"",trim($Search));
+	if (trim((string)$Search)) {
+		$Search = str_replace('"',"",trim((string)$Search));
 		$Search = str_replace("'","",$Search);
 		if ($Search) {
 			$q .= " and (Search like '%$Search%') ";
@@ -52,17 +61,17 @@ if ($S) {
 	$UserID = GetVar("UserID");
 	if ($UserID) $q .= " and " . USERS_TABLE . ".ID=$UserID";	
 
-	if (trim($CREATEDBY)) {
+	if (trim((string)$CREATEDBY)) {
 		$q .= " and $Table.CREATEDBY = '$CREATEDBY'";
 		$str .= " by user Account $CREATEDBY";
 	}
-	if (trim($StartDate)) {
+	if (trim((string)$StartDate)) {
 		$q .= " and $Table.CREATED >= '$StartDate'";
-		if (!trim($EndDate)) $str .= " Since $StartDate";
+		if (!trim((string)$EndDate)) $str .= " Since $StartDate";
 	}
-	if (trim($EndDate)) {
+	if (trim((string)$EndDate)) {
 		$q .= " and $Table.CREATED < '$EndDate'";
-		if (trim($StartDate)) $str .= " for the Period of $StartDate to $EndDate ";
+		if (trim((string)$StartDate)) $str .= " for the Period of $StartDate to $EndDate ";
 		else $str .= " before $EndDate";
 	}
 

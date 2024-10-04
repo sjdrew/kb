@@ -56,9 +56,33 @@ class ListBox {
 	var $RowHeight;
 	var $NoTopStats;
 	var $NoTitles;
+    var $Form;
+    var $PageSize;
+    var $Sort2;
+    var $TableNum;
+    var $TableID;
+    var $Repost;
+    var $UrlParam;
+    var $DefaultSaveAs;
+    var $PrevPageIndicator;
+    var $NextPageIndicator;
+    var $printview;
+    var $CurPage;
+    var $StartRow;
+    var $TotalPages;
+    var $LogQueryTime;
+    var $Height;
+    var $workbook;
+    var $XLS_BodyFmtA;
+    var $XLS_BodyFmtR;
+    var $XLS_BodyFmtC;
+    var $result;
+    var $ListingRowCount;
+    var $rowData;
+    var $hdrRowData;
 	
-	function ListBox($title,&$AppDB,$q,$Fields,$Sort="",$ModifyPage="",$subtitle="",$sortable=0,$width='90%',
-                 $hlp="",$SumFlds="",$Style="",$CellStyle="list",$limit="") 
+	function __construct($title,&$AppDB,$q,$Fields,$Sort="",$ModifyPage="",$subtitle="",$sortable=0,$width='90%',
+                 $hlp="",$SumFlds=null,$Style="",$CellStyle="list",$limit="") 
 	{
 		static $TableNum;
    		$this->TableNum =& $TableNum;		
@@ -120,15 +144,13 @@ class ListBox {
 		}
 		$this->CurPage = GetVar("Page_$this->TableID");	
 		
-		if (!$this->AppDB) {
-			$this->AppDB = new OldAppDB();
-		}
 	}
 
 	// Does all the work for a default listbox, header, rows, etc
 	function Display() 
 	{
-		global $PHP_SELF;
+		$_SERVER['PHP_SELF'] = $_SERVER['PHP_SELF'];
+
 		if ($this->Export) {
 			$this->InitExport();
 
@@ -143,7 +165,7 @@ class ListBox {
 		ob_start();
 		
 		if ($this->Form)
-			echo "<form name=\"F_$this->TableID\" method=GET action=\"$PHP_SELF\">\n";
+			echo "<form name=\"F_$this->TableID\" method=GET action=\"".$_SERVER['PHP_SELF']."\">\n";
 
 		if ($this->ScrollAfterRows) $this->PageSize = -1; // turn of if scrolling
 
@@ -210,7 +232,7 @@ class ListBox {
 		if (!$this->NoTopStats) $PageLinks = "<i>(" . number_format($this->TotalRows) . " Items)</i>&nbsp; ";
 		
 		$PageLinks .= "Pages: ";
-
+        $comma = '';
 		// Show as Page: < 1..12,[14],15..31 >
 		for($Page = 1, $n = 0; $n < $this->TotalRows; ) {
 			if ($n == 0)  $PageLinks .= $this->page_link($this->CurPage - 1, $this->PrevPageIndicator) . " ";
@@ -368,19 +390,18 @@ class ListBox {
 		if ($this->NoTitles) return;
 		
 		$this->StartRow();
-		
-		while (list ($key, $val) = each ($this->Fields)) {
-				
+					
+        foreach($this->Fields as $key => $val) {    
 			$F = $this->FieldParams($key,$val);
 		
 			
-			if ($this->sortable && substr($F->formatting,0,6) != "nosort") {
+			if ($this->sortable && substr((string)$F->formatting,0,6) != "nosort") {
 				$data = $this->HdrCelSortable($F->fld,$F->use_title,$this->Sort,$hdr_style);
 			} 
 			else {
 				$data = $this->HdrCel($F->use_title);
 			}
-			if (trim($F->cwidth)) $w = "width=\"$F->cwidth\""; 
+			if (trim((string)$F->cwidth)) $w = "width=\"$F->cwidth\""; 
 			else $w = "";
 			$this->PrintCel($hdr_style, "$w $F->formatting ", $data,1);
 		}
@@ -389,20 +410,22 @@ class ListBox {
 	
 	function FieldParams($key,$val)
 	{
+        $F = new stdClass();
+        
 		$F->formatting = $F->fmt_func = "";
 		
-		$e = split(':',$val,2);
+		$e = explode(':',$val,2);
 		if (count($e) > 0) $F->cwidth = $e[0];
 		if (count($e) > 1) $F->formatting = $e[1];
 		
 		unset($e);
 		
-		$e = split('@',$F->cwidth);
+		$e = explode('@',$F->cwidth);
 		if (count($e) > 0) $F->cwidth = $e[0];
 		if (count($e) > 1) $F->fmt_func = $e[1];
 		unset($e);
 		
-		$e = split(':',$key,2);
+		$e = explode(':',$key,2);
 		if (count($e) > 0) $F->fld = $e[0];
 		if (count($e) > 1) $F->use_title = $e[1]; 
 		else $F->use_title = $F->fld;
@@ -421,12 +444,12 @@ class ListBox {
 			$use_title = $colname;
 	
 		$Style .= "-sort";  // now = list-hdr-sort
-		
+		$img='';
 		if ($Sort) {
 			$sn = $Sort;
 			$stype = "up";
 			if (($p = strpos($Sort," desc"))) {
-				$sn = substr($Sort,0,$p);
+				$sn = substr((string)$Sort,0,$p);
 				$stype = "dn";
 			}
 			if ($sn == $colname) {
@@ -455,13 +478,19 @@ class ListBox {
 	{
 		if ($this->Export) {
 			if ($this->ExportXLS) {
-				if ($bHdr)
-					$this->worksheet->write_string($this->RowIdx,$this->ColIdx,$data,$this->XLS_HdrFmt);
+				if ($bHdr) {
+                    if (!$this->hdrRowData) $this->hdrRowData = [];
+                    $this->hdrRowData[] = [$data,$formatting];
+                }
 				else {
-					if (substr($data,0,1) == '$' and strlen($data) < 16) {
+                    if (!$this->rowData) $this->rowData = [];
+                    $this->rowData[] = [$data,$formatting];
+               
+                    /*
+					if (substr((string)$data,0,1) == '$' and strlen((string)$data) < 16) {
 						$fmt = $this->XLS_BodyFmtA;
 						$num = true;
-						$data = substr($data,1);
+						$data = substr((string)$data,1);
 						$data = str_replace(',','',$data);
 					}
 					else if (stristr($formatting,"right")) {
@@ -475,11 +504,14 @@ class ListBox {
 					if ($num) 
 						$this->worksheet->write_number($this->RowIdx,$this->ColIdx,$data,$fmt);
 					else {
-						if (strlen($data) > 50)
+						if (strlen((string)$data) > 50)
 						  	$this->worksheet->set_column($this->ColIdx, $this->ColIdx, 40);							
 						$this->worksheet->write_string($this->RowIdx,$this->ColIdx,$data,$fmt);
 				         }
-				}
+				
+                     * 
+                     */
+                }
 				$this->ColIdx++;
 			}
 			else echo "\"$data\",";
@@ -491,6 +523,24 @@ class ListBox {
 	{
 		if ($this->Export) {
 			if ($this->ExportXLS) {
+                
+                if ($this->hdrRowData) {
+                    $data = [];
+                    foreach($this->hdrRowData as $d) {
+                        $data[$d[0]] ='string';                  
+                    }
+                    $this->workbook->writeSheetHeader('Export',$data); 
+                    $this->hdrRowData = null;
+                }
+                else {
+                    $data = [];
+                    foreach($this->rowData as $d) {
+                        $data[] = $d[0];                  
+                    }
+                    $this->workbook->writeSheetRow('Export',$data);
+                    $this->rowData = null;
+                }
+                
 				$this->RowIdx++;
 				$this->ColIdx = 0;
 			}
@@ -526,7 +576,7 @@ class ListBox {
 				$query .= " limit $this->StartRow,$this->PageSize";
 			}
 		}
-   		$this->result = $this->AppDB->sql($query,"Listing Error");
+   		$this->result = $this->AppDB->sql($query);
 		// Execute query for count
 
 		if (!$this->result) return false;	
@@ -561,14 +611,14 @@ class ListBox {
 		// for the cell data and returning a url href string.
 		//
 		$ModifyPage = $this->ModifyPage;
-		
-		$e = split('@',$ModifyPage);
+		$lnkfld = '';
+		$e = explode('@',$ModifyPage);
 		$urlfmt = "";
 		if (count($e) > 1) $urlfmt = $e[1];
 		
 		if (!$urlfmt) {  // If modify page is fully spec'd then use it
 			if (strstr($ModifyPage,":")) {
-				list($ModifyPage, $lnkfld) = split(":",$ModifyPage,2);
+				list($ModifyPage, $lnkfld) = explode(":",$ModifyPage,2);
 			}
 			$elem = "?";
 			if (strstr($ModifyPage,"?")) {
@@ -587,7 +637,7 @@ class ListBox {
 	
 		if ($this->AppDB->databaseType == "mssql") { // no limit support. TODO: add stored procedure	
 			if ($this->limit) { 				
-				list($start,$count) = split(',',substr($this->limit,6));
+				list($start,$count) = explode(',',substr((string)$this->limit,6));
 				$this->AppDB->Move($this->result,$start);			
 			}
 			else if ($this->StartRow && $this->PageSize > 0) {
@@ -595,7 +645,7 @@ class ListBox {
 			}
 		}
 		
-	
+        $Totals = [];
 		while (1) {
 		
 			if ($this->PageSize > 0 && $this->AppDB->databaseType == "mssql" && $nRec >= $this->PageSize) {
@@ -615,7 +665,7 @@ class ListBox {
 			}
 		
 			$trSpecSel = '';
-			if ($trSpec == "" && $R["ID"] && $doingTotals == 0 && !$this->printview) {
+			if ($trSpec == "" && !empty($R["ID"]) && $doingTotals == 0 && !$this->printview) {
 				$trSpecSel = 'onmousedown="selRow(this,\'click\')" '; 
 				$IDS .= $comma . "'" . $R["ID"] . "'"; $comma = ',';
 			}	
@@ -626,7 +676,7 @@ class ListBox {
 			
 			$first = 1;
 
-			while (list ($key, $val) = each ($this->Fields)) {
+            foreach($this->Fields as $key => $val) {
 								
 				$F = $this->FieldParams($key, $val);
 				
@@ -634,7 +684,7 @@ class ListBox {
 					$data = $Totals[$F->fld];
 				}
 				else {
-					$data = $R[$F->fld];
+					$data = @$R[$F->fld];
 				}
 				$class = ($nRec & 1) ? $this->CellStyle . "2" : $this->CellStyle;
 				$class = ($doingTotals == 0) ? $class : "list-hdr";
@@ -647,9 +697,9 @@ class ListBox {
 				}
 				if ($F->fmt_func) {
 					$func = $F->fmt_func;
-					$data = $func($data,$R["ID"],$R);
+					$data = $func($data,(isset($R["ID"])) ? $R['ID'] : null,$R);
 				}
-				if (trim($F->cwidth)) {
+				if (trim((string)$F->cwidth)) {
 					$F->formatting .= " width=\"$F->cwidth\"";
 				}
 				if ($first) {
@@ -733,73 +783,42 @@ class ListBox {
 	function InitExport()
 	{
   		// HTTP headers
-		global $PHP_SELF;
-		$base = basename($PHP_SELF,".php");
+		$base = basename($_SERVER['PHP_SELF'],".php");
 		
 		if ($this->DefaultSaveAs)  
 			$defaultsaveas = $this->DefaultSaveAs;
 		else 
 			$defaultsaveas = "Export_".$base;
 	
-		if ($this->ExportXLS) $defaultsaveas .= ".xls";
+		if ($this->ExportXLS) $defaultsaveas .= ".xlsx";
 		else $defaultsaveas .= ".csv";
 		
 		Header_Excel($defaultsaveas);
 
 		if ($this->ExportXLS) {
 			$fontsize = 9;
-		  	require_once('Worksheet.php');
-		  	require_once('Workbook.php');
 
+		  	require_once('xlsxwriter.class.php');
+
+            //TODO: Formatting.
+            
 		  	// Creating a workbook
-		  	$this->workbook = new Workbook("-"); // write to stdout
-		  	$this->worksheet =& $this->workbook->add_worksheet("Export");
-			//$worksheet->hide_gridlines(2); // hide on screen and printout
-			//$this->worksheet->set_zoom(80);
+		  	$this->workbook = new XLSXWriter();
+
+            /*
 			$this->worksheet->set_margins_TB(.25);
 			$this->worksheet->set_margins_LR(.4);
 			$this->worksheet->set_landscape();
 		 	$this->worksheet->fit_to_pages(1,99);
- 
- 		 	// Format for the body
-  			$this->XLS_BodyFmt =& $this->workbook->add_format();
-  			$this->XLS_BodyFmt->set_size($fontsize);
-			$this->XLS_BodyFmt->set_text_wrap(1);
+ */
 
- 		 	// Format centered
-  			$this->XLS_BodyFmtC =& $this->workbook->add_format();
-  			$this->XLS_BodyFmtC->set_size($fontsize);
-  			$this->XLS_BodyFmtC->set_align('center');
-
- 		 	// Format right
-  			$this->XLS_BodyFmtR =& $this->workbook->add_format();
-  			$this->XLS_BodyFmtR->set_size($fontsize);
-  			$this->XLS_BodyFmtR->set_align('right');
-  
-  			// Format center bold
-		  	$this->XLS_HdrFmt =& $this->workbook->add_format();
-		  	$this->XLS_HdrFmt->set_size($fontsize+1);
-		  	$this->XLS_HdrFmt->set_bold();
-		  	$this->XLS_HdrFmt->set_align('center');
-
- 		 	// Format right dollar value
-  			$this->XLS_BodyFmtA =& $this->workbook->add_format();
-  			$this->XLS_BodyFmtA->set_size($fontsize);
-  			$this->XLS_BodyFmtA->set_align('right');
-			$this->XLS_BodyFmtA->set_num_format('$#,##0');
-	
-	  		// set_column(integer $firstcol, integer $lastcol, integer $width, [ mixed $format, integer $hidden ])
-			// Set widths
-  			//$this->worksheet->set_column(0, 40, 17); // set first 40 cols width
-			$this->worksheet->set_row(0,20); // set first row height
 		}
 	}
 
 	function ExportClose()
 	{
 		if ($this->ExportXLS) {
-		  	$this->worksheet->set_column(0, 40, 17); // set first 40 cols width
-			$this->workbook->close();
+			$this->workbook->writeToStdOut();
 		}
 		exit; // end page.	
 	}		
@@ -814,9 +833,9 @@ class ListBoxSelection extends ListBox
 	var $Height;
 	
 	// was sel_listing
-	function ListBoxSelection(&$AppDB,$q,$Fields,$Height,$Sort,$sortable=0,$limit="")
+	function __construct(&$AppDB,$q,$Fields,$Height,$Sort,$sortable=0,$limit="")
 	{
-		parent::ListBox($title,$AppDB,$q,$Fields,$Sort,"","",$sortable=0); 
+		parent::__construct('',$AppDB,$q,$Fields,$Sort,"","",$sortable=0); 
 				 				$this->Height = $Height;
 		$this->limit = $limit;
 		$this->ListingRowCount = 0;
@@ -848,15 +867,14 @@ class ListBoxSelection extends ListBox
 		echo '<div class="FakeSelBOXt" id="SelBoxt">' . "\n";
 		echo '<table width="100%" border=0 cellspacing=0 cellpadding=0>';
 		echo "<tr>\n";
-		while (list ($key, $val) = each ($this->Fields)) {
-
-			list ($cwidth, $formatting) = split(':',$val,2);
-			list ($cwidth, $fmt_func) = split('@',$cwidth);
-			list ($fld, $use_title) = split(':',$key,2);
+        foreach($this->Fields as $key => $val) {
+			list ($cwidth, $formatting) = explode(':',$val,2);
+			list ($cwidth, $fmt_func) = explode('@',$cwidth);
+			list ($fld, $use_title) = explode(':',$key,2);
 			if (!$use_title) $use_title = $fld;
 					
 			if ($this->sortable) {
-				$data = $this->HdrCelSortable($fld,$use_title,$Sort);
+				$data = $this->HdrCelSortable($fld,$use_title,'');
 			} 
 			else {
 				$data = $this->HdrCel($use_title);
@@ -890,8 +908,9 @@ class FrameBox
 	var $PageLinks;
 	var $TableID;
 	var $DialogFrame;
+    var $TableStyle;
 	
-	function FrameBox($title,$width,$subtitle="",$help="",$PageLinks="")
+	function __construct($title,$width,$subtitle="",$help="",$PageLinks="")
 	{	
 		$this->Style = "window-frame";
 		$this->CelStyle = "window-cel";
@@ -991,13 +1010,13 @@ class FrameBox
 	
 		if ($this->DialogFrame) {
 
-		echo '
-			<table cellspacing="0" cellpadding="0" width="100%" border="0">
-		    <tr>
-				   <td height="20%" id="DialogTitleArea" class="DialogTitle">'.$this->title.'</td>
-				</tr>
-			<tr>';
-		}
+            echo '
+                <table cellspacing="0" cellpadding="0" width="100%" border="0">
+                <tr>
+                    <td height="20%" id="DialogTitleArea" class="DialogTitle">'.$this->title.'</td>
+                    </tr>
+                <tr>';
+        }
 		else {
 		
 		/* Uses following:
@@ -1010,8 +1029,7 @@ class FrameBox
 		 *				window-frame.boxtable
 		 *				window-frame.boxfooter
 		 */
-		 echo '
-	<!--[if IE]><style type="text/css">.' . $this->Style . ' .boxcontent { width: 100%; }</style><![endif]-->		 
+		 echo '	 
 		<table width="'. $this->width . '" border=0>
 		  <tr>
 		    <td valign="baseline" width="100%"><div class="window-frame"><b class="b1"></b><b class="b2"></b><b class="b3"></b><b class="b4"></b>

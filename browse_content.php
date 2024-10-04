@@ -25,6 +25,12 @@ function ListModifySelected()
 	$Sort = GetVar("Sort");
 		
 	if (!$_GET) exit;
+    
+    $GroupID = GetVar('GroupID');
+    $Product = GetVar('Product');
+    $Type = GetVar('Type');
+    $Sort = GetVar('Sort');
+    
 	$DBFields["ID:ID"] = "@fmt_kb";
 	$DBFields["Title"] = " ";
 	$DBFields["Hits"] = " ";
@@ -33,20 +39,20 @@ function ListModifySelected()
 	if ($Sort == "")
 		$Sort = "Title";
 	
-	if (trim($GroupID)) {
+	if (trim((string)$GroupID)) {
 		$q .= " and Articles.GroupID = '$GroupID'";
 		$GR = $AppDB->GetRecordFromQuery("select * from Groups where GroupID= $GroupID");
 		$qtxt = " for Group $GR->Name";
 		$and = "and";
 	}
 
-	if (trim($Product)) {
+	if (trim((string)$Product)) {
 		if ($Product == "(unspecified)") $q .= " and Product is NULL ";
-		else $q .= " and Product = " . $AppDB->qstr(trim($Product));
+		else $q .= " and Product = " . $AppDB->qstr(trim((string)$Product));
 		$and = "and";
 	}
 		
-	if (trim($Type)) {
+	if (trim((string)$Type)) {
 		if ($Type == "(unspecified)") $q .= " and Type is NULL ";
 		else $q .= " and Type = '$Type'";
 		$and = "and";

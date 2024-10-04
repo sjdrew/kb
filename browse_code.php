@@ -1,9 +1,13 @@
 <? 	include("config.php"); 
+
+    $GroupID = GetVar('GroupID');
+    $Grouping = GetVar('Groupinf');
+    
 	if (!$GroupID) {
 		$GroupID = $CUser->u->GroupID;
 	}
 ?>
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!DOCTYPE HTML">
 <html>
 <head>
 <title><? echo $AppDB->Settings->AppName ?> - Articles</title>
@@ -108,7 +112,8 @@ var menu = new MTMenu();
 	echo '<script type="text/javascript">' . "\n";
 	// Select all disctinct Products and Active Types
 	$pf = PrivFilter();
-	if (trim($GroupID) != "") {
+    $gf = '';
+	if (trim((string)$GroupID) != "") {
 		$gf = "and GroupID=$GroupID ";
 	}
 	

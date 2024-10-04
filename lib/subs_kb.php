@@ -32,10 +32,6 @@ function AutoCreateUser($u)
 	global $AppDB;
 	if ($u) {
 		// Only used when using NT Authentication and ALLOW_GUESTS is true to create a record on the fly.
-
-		if ($AppDB->Settings->RemedyARServer ) {
-			AutoCreateFromRemedy($u);
-		}
 		
 		if (defined("LDAP_GROUP_PREFIX")) {
 			AutoCreateFromAD($u);
@@ -95,7 +91,7 @@ function AutoCreateFromAD($u)
 				$ADGrpName2 = $GrpRec->Name . ' ' . $PermsR[$Perm]; 
 				//error_log("Checking for $ADGrpName,$ADGrpName2");
 				if ( (in_array($ADGrpName,$AllADGroups) || in_array($ADGrpName2,$AllADGroups)) 
-  				    && (!in_array($ADGrpName,$ADGroupsPre) && !in_array($ADGrpNAme2,$ADGroupsPre)) ) {
+  				    && (!in_array($ADGrpName,$ADGroupsPre) && !in_array($ADGrpName2,$ADGroupsPre)) ) {
 					// no longer in group 
 					$DelGrps[] = $GrpRec->GroupID;
 					error_log("Removing user $u->Username from Group $GrpRec->Name as no longer in AD Group");
@@ -120,8 +116,8 @@ function AutoCreateFromAD($u)
 	// $ADGroupsPre = GroupName_Write or GroupName_Read etc.
 	foreach($ADGroupsPre as $ADGroup) {	
 		$tpos = strrpos($ADGroup,'_');
-		$Perm = trim(substr($ADGroup,$tpos+1));
-		$GroupName = trim(substr($ADGroup,0,$tpos));
+		$Perm = trim(substr((string)$ADGroup,$tpos+1));
+		$GroupName = trim(substr((string)$ADGroup,0,$tpos));
 		$CPerm = $ADGroups[$GroupName];
 		// Dont overwrite a higher priv with a lower one in the cases
 		// when use is in multiple perm groups of same group name.
@@ -163,62 +159,6 @@ function AutoCreateFromAD($u)
 			$SETS["Priv"] = PRIV_GROUP;
 		}
 	}	
-	$AppDB->update_record($u->ID,USERS_TABLE,$SETS,DB_NOAUDIT_UPDATE);
-}
-
-function AutoCreateFromRemedy($u)
-{	
-	global $AppDB;
-
-	//
-	// Pull info from Remedy's SHR_People table
-	//		
-	$RemDB = OpenRemedyDB();
-	if (!$RemDB) return; // silent failure
-
-		
-	if (REMEDY_VERSION == "7") {
-		$Rec = $RemDB->GetRecordFromQuery(
-			"select Phone_Number_Business as Phone, 
-				Internet_E_mail as Email,First_Name,Last_Name,Nick_Name,Remedy_Login_ID
-				from CTM_People where Remedy_Login_ID = '$u->Username' or Nick_Name = '$u->Username'");
-			
-		
-	} else {
-		$Rec = $RemDB->GetRecordFromQuery("select * from SHR_People where Login_Name = '$u->Username'");
-	}
-
-		
-	if (!$Rec) return;
-	$SETS = array();
-		
-	if ($u->Email == "") $SETS["Email"] = $Rec->Email;
-	if ($Rec->Phone) $SETS["Phone"] = $Rec->Phone;
-	$SETS["LastName"] = $Rec->Last_Name;
-	$SETS["FirstName"] = $Rec->First_Name;
-	$SETS["Priv"] = PRIV_GROUP;
-	$SETS['Groups'] = $u->Groups;
-		
-	// If User is a member of a Group on Remedy that exist on KB then make them a 
-	// write Member of that group.
-	//
-	$RURec = $RemDB->GetRecordFromQuery("select * from User_x where Login_Name = '$u->Username'");
-	if ($RURec) {
-		$RemedyGroups = explode(";",$RURec->Group_List);
-		$CurrentGroups = GroupStrToArray($u->Groups);
-		if ($SETS['Groups'] != '') $comma = ",";
-		foreach($RemedyGroups as $RGrp) {
-			$RGrp = trim(str_replace(";","",$RGrp));
-			if ($RGrp == "") continue;
-			if ($RGrp == 1) continue;
-			if ($CurrentGroups[$RGrp]) continue; //already a member.
-			if ($AppDB->GetRecordFromQuery("select * from Groups where GroupID = $RGrp")) {
-				$SETS["Groups"] .= $comma . "$RGrp" . ":W";
-				$comma = ",";
-				$SETS["Priv"] = PRIV_GROUP;
-			}
-		}
-	}		
 	$AppDB->update_record($u->ID,USERS_TABLE,$SETS,DB_NOAUDIT_UPDATE);
 }
 
@@ -276,13 +216,11 @@ function send_error($errmsg)
 	$mailmsg .= "\n\nBacktrace:\n---------\n\n<pre>";
 	$mailmsg .= get_backtrace(0);
 	$mailmsg .= print_r($CUser,1);
-	$mailmsg .= print_r($GLOBALS,1);
 	$mailmsg .= "</pre>";
 	
 	if (strtolower($CUser->u->Email) != strtolower($Notify)) {
 		$res = send_mail(array($Notify),'KB Error',$mailmsg,$mailmsg,$from);
 		if ($res <= 0) {
-			print_r($mail->errors);
 			echo '</td></tr></table></center><p align="left"><pre>' . $mailmsg .'</pre>';		
 		}
 	}
@@ -307,7 +245,7 @@ function send_mail($To,$Subject,$HtmlMsg,$TextMsg,$from,$Bcc = "")
     $mail = new htmlMimeMail();
 	$mail->setSMTPParams($SMTP, 25);
 	if ($HtmlMsg) 
-		$mail->setHtml($HtmlMsg,$TextMSg);
+		$mail->setHtml($HtmlMsg,$TextMsg);
 	else 
 		$mail->setText($TextMsg);
 		
@@ -353,7 +291,7 @@ function send_mail($To,$Subject,$HtmlMsg,$TextMsg,$from,$Bcc = "")
 					echo "Warning Notification EMail failed. Server: " . $AppDB->Settings->SMTPServer;
 					echo "<br><blockquote>";
 					foreach($mail->errors as $err) {
-						echo htmlspecialchars($err);
+						echo htmlspecialchars((string)$err);
 						echo "<br>";
 					}
 					echo "</blockquote>";
@@ -411,36 +349,16 @@ function SetContentSection($SectionName,$Content)
 	global $AppDB;
 	$RS = $AppDB->sql("select * from ContentSections where SectionName='$SectionName'");
 	if ($RS) $S = $AppDB->sql_fetch_obj($RS);
+    Logger("S = ".print_r($S,1));
 	$SETS["Content"] = $Content;
 	$SETS["SectionName"] = $SectionName;
 	if ($S) {
-		$AppDB->update_record($RS->ID,'ContentSections',$SETS);
+		$AppDB->update_record($S->ID,'ContentSections',$SETS);
 	} else {
 		$AppDB->insert_record("ContentSections",$SETS);
 	}
 }
 
-
-function DisplaySearchModes($param = '')
-{
-	global $AppDB;
-	global $CUser;
-	
-	if ($param == "") $param = "onchange='onchangewhat()' style='font-size:10px'";
-	$choices[] = "KB";
-	
-	if ($AppDB->Settings->RemedyARServer && $CUser->u->Priv >= PRIV_SUPPORT) {
-		$choices[] = "Remedy HelpDesk";
-		$choices[] = "Remedy Known Error";
-	}
-	if (SEARCH_OFFICE == 1) {
-		$choices[] = "Office Products";
-	}
-	if (SEARCH_MICROSOFT_KB == 1) {
-		$choices[] = "Microsoft KB";	
-	}	
-	dropdownlist("What",$choices,$choices,$_GET['What'],$param);  
-}
 
 
 //
@@ -450,7 +368,8 @@ function PrivFilter($MyGroupsOnly=false) // added MyGroupsOnly for benefit of ho
 {
 	global $CUser;
 	global $AppDB;
-			
+	
+    $q = '';
 	$Priv = $CUser->Priv();
 	if ($Priv == "") 
 		$Priv = PRIV_GUEST;
@@ -634,7 +553,7 @@ would
 you
 your
 ';
-	if (strlen(trim($w)) == 1) return 1;
+	if (strlen(trim((string)$w)) == 1) return 1;
 	
 	$w = strtolower($w);
 	if (strstr($NoiseWords,"$w\r"))
@@ -658,10 +577,10 @@ function TitleFormat($Title,$ViewableBy)
 function CheckIfKBNumber($Search,$Loc="article.php")
 {
  	$ID = "";
-	$Search = trim($Search);
- 	if (strtoupper(substr($Search,0,2)) == "KB") {
- 		$ID = (int)substr($Search,2);
-		if ($ID > 0 && $ID < 1000000 && strlen($ID) < 7) {
+	$Search = trim((string)$Search);
+ 	if (strtoupper(substr((string)$Search,0,2)) == "KB") {
+ 		$ID = (int)substr((string)$Search,2);
+		if ($ID > 0 && $ID < 1000000 && strlen((string)$ID) < 7) {
 			header("location:" . $Loc . "?ID=$ID");
 			exit;
 		}
@@ -698,13 +617,15 @@ function BuildSearchQuery($Search,$QSub,$SMethod,$ShowOnlyOnce=0)
 	if ($qc % 2 != 0) {
 		$Search = str_replace('"','',$Search);		
 	}
+    $WordMethod = 0;
 
+    $Clause = '';
 	$Words = array();
 	if ($SMethod == "CONTAINSTABLE") {
 		$sa = search_split_terms($Search);
 		$Search_s = "";
 		foreach($sa as $phrase) {
-			$phrase = trim($phrase);
+			$phrase = trim((string)$phrase);
 			$phrase = str_replace("'","",$phrase);
 			if (strtolower("$phrase") == "and") continue;
 			if ($phrase) {
@@ -733,6 +654,10 @@ function BuildSearchQuery($Search,$QSub,$SMethod,$ShowOnlyOnce=0)
 	// each word searched for appears in same fulltext indexed column.
 	// Only way around that is multiple ContainsTable(... calls and joins
 	// This code creates those multiple statements based on number of words/phrases in query.
+    $RankT = '';
+    $plus = '';
+    $QAttach2 = '';
+    $QArt2 = '';
 	if ($WordMethod) {
 		$i = 1;
 		foreach($Words as $Word) {
@@ -780,7 +705,7 @@ select Results.*,Results.ID as RID,
 	Results.Rank + (A.Hits / 50) as RankAndHits,
 	A.LastReviewed,
 	Groups.Name as GroupName,
-       cast(cast(A.Content as varchar(800)) as text) as Content 
+       cast(cast(A.Content as nvarchar(800)) as nvarchar) as Content 
 
    from ( ';
    
@@ -942,14 +867,15 @@ function SendNotifications($ID,$Type)
 	global $AppDB;
 	$Table = USERS_TABLE;
 	global $CUser;
-
+    $To = [];
+    
 	if (!$ID) return;
 	
 	$KB = $AppDB->GetRecordFromQuery("select * from Articles where ID=$ID");
 
 	$GroupID = $KB->GroupID;
 	
-	
+    
 	// If  article is modified send notifications if ContentLastModified is at least 4 hours old.
 		
 	// Find all users for this group with Notification enabled
@@ -959,7 +885,8 @@ function SendNotifications($ID,$Type)
 	if ($KB->STATUS == "Active" || $Type == "NotifyTechnicalReview" || $Type == "NotifyContentReview") {	
 	
 		if ($KB->STATUS != "Active") $GF = "A"; // need approve priv in group to be notified about the review required
-		
+		else $GF = '';
+        
 		$q = "select * from $Table where Email is not NULL AND $Type = 'Yes'";
 		$q .= " and ($Table.Groups like '1:%' OR $Table.Groups like '%,1:%' OR $Table.Groups like '$GroupID:$GF%' OR $Table.Groups like '%,$GroupID:$GF%') ";
 		if ($Type == "NotifyUpdated") 
@@ -1013,7 +940,7 @@ function SendNotifications($ID,$Type)
 
 		if (!$HtmlMsg) return '';
 		
-		$Textmsg = HTMLToReadableText($HtmlMsg);
+		$TextMsg = HTMLToReadableText($HtmlMsg);
 								
 		$Num = send_mail(array(),$Subjectstr . "KB". $KB->ID . " - $KB->Title",$HtmlMsg,$TextMsg,$from,$To);
 		
@@ -1063,7 +990,7 @@ function SendNoteToAuthors($ID,$NoteID)
 		$HtmlMsg = $Template->render("EmailTemplates/NotifyNotes.tpl");
 		
 		if ($HtmlMsg) {
-			$Textmsg = HTMLToReadableText($HtmlMsg);
+			$TextMsg = HTMLToReadableText($HtmlMsg);
 			$Num = send_mail($To,"Note added to Article: $ID",$HtmlMsg,$TextMsg,$from);	
 		}
 		if ($Num > 0) {		
@@ -1117,7 +1044,7 @@ function SendNoteToContacts($ID,$NoteID)
 		$HtmlMsg = $Template->render("EmailTemplates/NotifyNotes.tpl");
 		
 		if ($HtmlMsg) {
-			$Textmsg = HTMLToReadableText($HtmlMsg);
+			$TextMsg = HTMLToReadableText($HtmlMsg);
 			$Num = send_mail($To,"Note added to Article: $ID",$HtmlMsg,$TextMsg,$from);	
 		}
 		if ($Num > 0) {		
@@ -1163,14 +1090,14 @@ function CreateArchiveRecord($OldRec, $bNoPurge=0)
 
 	$ID = $NR["ID"];
 	$LR = $AppDB->GetRecordFromQuery("select top 1 ID from ArchiveArticles where ID >= $ID AND ID < ($ID + 1) order by ID desc");
-	if ($LR->ID) $AID = $LR->ID + .0001;
+	if (isset($LR->ID)) $AID = $LR->ID + .0001;
 	else $AID = .0001 + $ID; 
 	$NR["ID"] = $AID;
-	list($garb,$version) = explode('.',$AID,2);
+	@list($garb,$version) = explode('.',$AID,2);
 	// Replace src="files/KB000008" with src="files/$AID" so as to point to archived copies
 	$OLDPATH = FILES_FOLDER . fmt_kb($ID);
 	$NEWPATH = $OLDPATH . sprintf(".%04d",$version);
-	$NR["Content"] = str_replace("src=\"$OLDPATH","src=\"$NEWPATH",$NR["Content"]);
+	$NR["Content"] = str_replace("src=\"$OLDPATH","src=\"$NEWPATH",(string)$NR["Content"]);
 	
 	$AppDB->insert_record("ArchiveArticles",$NR,0);
 
@@ -1179,7 +1106,7 @@ function CreateArchiveRecord($OldRec, $bNoPurge=0)
 	while($Att = $AppDB->sql_fetch_array($AttRS)) {
 		$Att["ArchiveArticleID"] = $AID;
 		$Attachment = $Att["Attachment"];
-		$Att["Attachment"] = "null";
+		unset($Att["Attachment"]);
 		unset($Att['ArticleID']);
 		$AttID = $AppDB->insert_record("ArchiveArticleAttachments",$Att);
 		if ($AttID) $AppDB->UpdateBlob("ArchiveArticleAttachments","Attachment",$Attachment,"ID=$AttID");
@@ -1231,8 +1158,8 @@ function RestoreArticleVersion($ID,$OldRec,$AID)
 			rmdirr(APP_ROOT_DIR . $OLDPATH);
 			deep_copy(APP_ROOT_DIR . $NEWPATH, APP_ROOT_DIR . $OLDPATH);
 			
-			$AFields[ArticleID] = $ID;
-			$AFields[Trail] = "Article restored from version $AID";
+			$AFields['ArticleID'] = $ID;
+			$AFields['Trail'] = "Article restored from version $AID";
 			AuditTrail("ArticleRestored",$AFields);
 
 			// Copy attachments back
@@ -1293,7 +1220,8 @@ function MessageQuery($ID = "",$ShowAll = 0, $bDateReadInfo = 0)
 	global $AppDB;
 	$Table = "Messages";
 	global $AppDB;
-	
+	$q2 = '';
+    $DateReadSubQuery = '';
 	$duration = " convert(varchar,datediff(day,StartTime,EndTime)) + ' ' + convert(varchar,endTime-StartTime,108) as Duration, ";
 	if ($bDateReadInfo) $DateReadSubQuery = "(select top 1 CREATED from MessageHits where MessageHits.MessageID=Messages.ID AND MessageHits.CREATEDBY='$CUser->UserID' order by MessageHits.CREATED desc) as DateRead, "; 
 
@@ -1358,26 +1286,35 @@ function print_icons($purl,$export=1)
 function AuditTrail($Action,$AFields) 
 {
 	global $AppDB;
-	if ($AFields['ArticleID'] > 0) $AppDB->insert_record("AuditTrail",$AFields);
+	if (!empty($AFields['ArticleID'])) $AppDB->insert_record("AuditTrail",$AFields);
 	AuditAction($Action,$AFields);
 }
 
-function OpenRemedyDB()
+/**
+ * 
+ * @param string $msg
+ * @param string $level
+ * @param string $trace
+ * @param boolean $includePost
+ */
+function Logger($msg,$level='LOG',$trace='',$includePost=true)
 {
-	global $AppDB;
-	static $RemDB;
-	
-	if ($RemDB) return $RemDB;
-	
-	if ($AppDB->Settings->RemedyARServer == "") return 0;
-	
-	$RemDB = new DB($AppDB->Settings->RemedyDBServer,"mssql",
-			REMEDY_DBUSER,
-			REMEDY_DBPASS, "ARSystem",0);
-	if (!$RemDB || $RemDB->failed) {
-		$RemDB = 0;
-	}
-	return $RemDB;
-}
 
-?>
+	if ($level != 'LOG' && $level != 'PHP') {
+        $ErrMsg = $level.": " . $msg;
+        if ($trace) {
+            $ErrMsg .= "\n$trace";
+        } else {
+     		$e = new Exception;
+        	$ErrMsg .= "\n" . $e->getTraceAsString();
+        }
+	}
+    else {
+		$e = new Exception;
+        $a =$e->getTrace();
+        $ErrMsg = $level.": " . substr((string)$a[0]['file'],-20).':'.$a[0]['line'] . " " . $msg;
+    }
+    
+    error_log($ErrMsg);
+
+}

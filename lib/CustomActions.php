@@ -24,19 +24,19 @@ function AuditAction($Action,$AFields)
 	$LogActivity = true;
 	
 	$Fields['Activity'] = $Action;
-	if ($AFields['ArticleID']) {
+	if (!empty($AFields['ArticleID'])) {
 		$Fields['ItemID'] = $AFields['ArticleID'];
 		$Fields['Tbl'] = "Articles";
 	}
-	else if ($AFields['ID']) {
+	else if (!empty($AFields['ID'])) {
 		$Fields['ItemID'] = $AFields['ID'];
 		$Fields['Tbl'] = "Articles";	
 	}
-	else if ($AFields['BulletinID']) {
+	else if (!empty($AFields['BulletinID'])) {
 		$Fields['ItemID'] = $AFields['BulletinID'];
 		$Fields['Tbl'] = "Messages";
 	}
-	else if ($AFields['SearchID']) {
+	else if (!empty($AFields['SearchID'])) {
 		$Fields['ItemID'] = $AFields['SearchID'];
 		$Fields['Tbl'] = "Searches";	
 	}
@@ -130,5 +130,3 @@ function AuditAction($Action,$AFields)
 		}
 	}
 }
-
-?>

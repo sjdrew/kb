@@ -8,6 +8,8 @@
  *
  */
 
+ $msg = GetVar('msg');
+
 /**
  * Detect and allow running from the cmd line, so this can be scheduled
  * as php admin_ad_group_sync.php
@@ -27,7 +29,7 @@ include("config.php");
    
    RequirePriv(PRIV_ADMIN);
 
-if ($_GET['Sync']) {
+if (GetVar('Sync')) {
 	AD_Group_Sync($msg);
 	$msg = nl2br($msg);	
 }
@@ -52,7 +54,7 @@ function ParseForm(f)
 }
 </script>
 <? include("header.php"); ?>
-<form onSubmit="ParseForm(this)" name=form action="<? echo $PHP_SELF ?>" method="get">
+<form onSubmit="ParseForm(this)" name=form action="<? echo $_SERVER['PHP_SELF'] ?>" method="get">
 <table width="100%" border=0 cellspacing=0 cellpadding=0><tr>
 <td style="vertical-align:top" width="25%" class="subhdr">
 <img src="images/groups_sync.jpg" width="56" height="59"></td>
@@ -60,7 +62,8 @@ function ParseForm(f)
 </tr></table>
 
 <? 
-	if (!$_GET['Sync']) {
+	if (!GetVar('Sync')) {
+        
 ?>
 
 <div align="center">

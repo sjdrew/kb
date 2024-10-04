@@ -425,7 +425,7 @@ function GetStringWidth($s)
 	$s=(string)$s;
 	$cw=&$this->CurrentFont['cw'];
 	$w=0;
-	$l=strlen($s);
+	$l=strlen((string)$s);
 	for($i=0;$i<$l;$i++)
 		$w+=$cw[$s{$i}];
 	return $w*$this->FontSize/1000;
@@ -706,7 +706,7 @@ function MultiCell($w,$h,$txt,$border=0,$align='J',$fill=0)
 		$w=$this->w-$this->rMargin-$this->x;
 	$wmax=($w-2*$this->cMargin)*1000/$this->FontSize;
 	$s=str_replace("\r",'',$txt);
-	$nb=strlen($s);
+	$nb=strlen((string)$s);
 	if($nb>0 and $s[$nb-1]=="\n")
 		$nb--;
 	$b=0;
@@ -746,7 +746,7 @@ function MultiCell($w,$h,$txt,$border=0,$align='J',$fill=0)
 				$this->ws=0;
 				$this->_out('0 Tw');
 			}
-			$this->Cell($w,$h,substr($s,$j,$i-$j),$b,2,$align,$fill);
+			$this->Cell($w,$h,substr((string)$s,$j,$i-$j),$b,2,$align,$fill);
 			$i++;
 			$sep=-1;
 			$j=$i;
@@ -776,7 +776,7 @@ function MultiCell($w,$h,$txt,$border=0,$align='J',$fill=0)
 					$this->ws=0;
 					$this->_out('0 Tw');
 				}
-				$this->Cell($w,$h,substr($s,$j,$i-$j),$b,2,$align,$fill);
+				$this->Cell($w,$h,substr((string)$s,$j,$i-$j),$b,2,$align,$fill);
 			}
 			else
 			{
@@ -785,7 +785,7 @@ function MultiCell($w,$h,$txt,$border=0,$align='J',$fill=0)
 					$this->ws=($ns>1) ? ($wmax-$ls)/1000*$this->FontSize/($ns-1) : 0;
 					$this->_out(sprintf('%.3f Tw',$this->ws*$this->k));
 				}
-				$this->Cell($w,$h,substr($s,$j,$sep-$j),$b,2,$align,$fill);
+				$this->Cell($w,$h,substr((string)$s,$j,$sep-$j),$b,2,$align,$fill);
 				$i=$sep+1;
 			}
 			$sep=-1;
@@ -807,7 +807,7 @@ function MultiCell($w,$h,$txt,$border=0,$align='J',$fill=0)
 	}
 	if($border and is_int(strpos($border,'B')))
 		$b.='B';
-	$this->Cell($w,$h,substr($s,$j,$i-$j),$b,2,$align,$fill);
+	$this->Cell($w,$h,substr((string)$s,$j,$i-$j),$b,2,$align,$fill);
 	$this->x=$this->lMargin;
 }
 
@@ -818,7 +818,7 @@ function Write($h,$txt,$link='')
 	$w=$this->w-$this->rMargin-$this->x;
 	$wmax=($w-2*$this->cMargin)*1000/$this->FontSize;
 	$s=str_replace("\r",'',$txt);
-	$nb=strlen($s);
+	$nb=strlen((string)$s);
 	$sep=-1;
 	$i=0;
 	$j=0;
@@ -831,7 +831,7 @@ function Write($h,$txt,$link='')
 		if($c=="\n")
 		{
 			//Explicit line break
-			$this->Cell($w,$h,substr($s,$j,$i-$j),0,2,'',0,$link);
+			$this->Cell($w,$h,substr((string)$s,$j,$i-$j),0,2,'',0,$link);
 			$i++;
 			$sep=-1;
 			$j=$i;
@@ -866,11 +866,11 @@ function Write($h,$txt,$link='')
 				}
 				if($i==$j)
 					$i++;
-				$this->Cell($w,$h,substr($s,$j,$i-$j),0,2,'',0,$link);
+				$this->Cell($w,$h,substr((string)$s,$j,$i-$j),0,2,'',0,$link);
 			}
 			else
 			{
-				$this->Cell($w,$h,substr($s,$j,$sep-$j),0,2,'',0,$link);
+				$this->Cell($w,$h,substr((string)$s,$j,$sep-$j),0,2,'',0,$link);
 				$i=$sep+1;
 			}
 			$sep=-1;
@@ -889,7 +889,7 @@ function Write($h,$txt,$link='')
 	}
 	//Last chunk
 	if($i!=$j)
-		$this->Cell($l/1000*$this->FontSize,$h,substr($s,$j),0,0,'',0,$link);
+		$this->Cell($l/1000*$this->FontSize,$h,substr((string)$s,$j),0,0,'',0,$link);
 }
 
 function Image($file,$x,$y,$w=0,$h=0,$type='',$link='')
@@ -903,7 +903,7 @@ function Image($file,$x,$y,$w=0,$h=0,$type='',$link='')
 			$pos=strrpos($file,'.');
 			if(!$pos)
 				$this->Error('Image file has no extension and no type was specified: '.$file);
-			$type=substr($file,$pos+1);
+			$type=substr((string)$file,$pos+1);
 		}
 		$type=strtolower($type);
 		$mqr=get_magic_quotes_runtime();
@@ -1022,7 +1022,7 @@ function Output($name='',$dest='')
 				Header('Content-Type: application/pdf');
 				if(headers_sent())
 					$this->Error('Some data has already been output to browser, can\'t send PDF file');
-				Header('Content-Length: '.strlen($this->buffer));
+				Header('Content-Length: '.strlen((string)$this->buffer));
 				Header('Content-disposition: inline; filename='.$name);
 			}
 			echo $this->buffer;
@@ -1035,7 +1035,7 @@ function Output($name='',$dest='')
 				Header('Content-Type: application/octet-stream');
 			if(headers_sent())
 				$this->Error('Some data has already been output to browser, can\'t send PDF file');
-			Header('Content-Length: '.strlen($this->buffer));
+			Header('Content-Length: '.strlen((string)$this->buffer));
 			Header('Content-disposition: attachment; filename='.$name);
 			echo $this->buffer;
 			break;
@@ -1044,7 +1044,7 @@ function Output($name='',$dest='')
 			$f=fopen($name,'wb');
 			if(!$f)
 				$this->Error('Unable to create output file: '.$name);
-			fwrite($f,$this->buffer,strlen($this->buffer));
+			fwrite($f,$this->buffer,strlen((string)$this->buffer));
 			fclose($f);
 			break;
 		case 'S':
@@ -1131,12 +1131,12 @@ function _putpages()
 		//Page content
 		$p=($this->compress) ? gzcompress($this->pages[$n]) : $this->pages[$n];
 		$this->_newobj();
-		$this->_out('<<'.$filter.'/Length '.strlen($p).'>>');
+		$this->_out('<<'.$filter.'/Length '.strlen((string)$p).'>>');
 		$this->_putstream($p);
 		$this->_out('endobj');
 	}
 	//Pages root
-	$this->offsets[1]=strlen($this->buffer);
+	$this->offsets[1]=strlen((string)$this->buffer);
 	$this->_out('1 0 obj');
 	$this->_out('<</Type /Pages');
 	$kids='/Kids [';
@@ -1172,7 +1172,7 @@ function _putfonts()
 		if(!$size)
 			$this->Error('Font file not found');
 		$this->_out('<</Length '.$size);
-		if(substr($file,-2)=='.z')
+		if(substr((string)$file,-2)=='.z')
 			$this->_out('/Filter /FlateDecode');
 		$this->_out('/Length1 '.$info['length1']);
 		if(isset($info['length2']))
@@ -1264,7 +1264,7 @@ function _putimages()
 		$this->_out('/Width '.$info['w']);
 		$this->_out('/Height '.$info['h']);
 		if($info['cs']=='Indexed')
-			$this->_out('/ColorSpace [/Indexed /DeviceRGB '.(strlen($info['pal'])/3-1).' '.($this->n+1).' 0 R]');
+			$this->_out('/ColorSpace [/Indexed /DeviceRGB '.(strlen((string)$info['pal'])/3-1).' '.($this->n+1).' 0 R]');
 		else
 		{
 			$this->_out('/ColorSpace /'.$info['cs']);
@@ -1282,7 +1282,7 @@ function _putimages()
 				$trns.=$info['trns'][$i].' '.$info['trns'][$i].' ';
 			$this->_out('/Mask ['.$trns.']');
 		}
-		$this->_out('/Length '.strlen($info['data']).'>>');
+		$this->_out('/Length '.strlen((string)$info['data']).'>>');
 		$this->_putstream($info['data']);
 		unset($this->images[$file]['data']);
 		$this->_out('endobj');
@@ -1291,7 +1291,7 @@ function _putimages()
 		{
 			$this->_newobj();
 			$pal=($this->compress) ? gzcompress($info['pal']) : $info['pal'];
-			$this->_out('<<'.$filter.'/Length '.strlen($pal).'>>');
+			$this->_out('<<'.$filter.'/Length '.strlen((string)$pal).'>>');
 			$this->_putstream($pal);
 			$this->_out('endobj');
 		}
@@ -1303,7 +1303,7 @@ function _putresources()
 	$this->_putfonts();
 	$this->_putimages();
 	//Resource dictionary
-	$this->offsets[2]=strlen($this->buffer);
+	$this->offsets[2]=strlen((string)$this->buffer);
 	$this->_out('2 0 obj');
 	$this->_out('<</ProcSet [/PDF /Text /ImageB /ImageC /ImageI]');
 	$this->_out('/Font <<');
@@ -1381,7 +1381,7 @@ function _enddoc()
 	$this->_out('>>');
 	$this->_out('endobj');
 	//Cross-ref
-	$o=strlen($this->buffer);
+	$o=strlen((string)$this->buffer);
 	$this->_out('xref');
 	$this->_out('0 '.($this->n+1));
 	$this->_out('0000000000 65535 f ');
@@ -1447,7 +1447,7 @@ function _newobj()
 {
 	//Begin a new object
 	$this->n++;
-	$this->offsets[$this->n]=strlen($this->buffer);
+	$this->offsets[$this->n]=strlen((string)$this->buffer);
 	$this->_out($this->n.' 0 obj');
 }
 
@@ -1538,9 +1538,9 @@ function _parsepng($file)
 			//Read transparency info
 			$t=fread($f,$n);
 			if($ct==0)
-				$trns=array(ord(substr($t,1,1)));
+				$trns=array(ord(substr((string)$t,1,1)));
 			elseif($ct==2)
-				$trns=array(ord(substr($t,1,1)),ord(substr($t,3,1)),ord(substr($t,5,1)));
+				$trns=array(ord(substr((string)$t,1,1)),ord(substr((string)$t,3,1)),ord(substr((string)$t,5,1)));
 			else
 			{
 				$pos=strpos($t,chr(0));

@@ -319,15 +319,15 @@ function adodb_date_test()
 		$pos = strcmp($s1,$s2);
 
 		if (($s1) != ($s2)) {
-			for ($j=0,$k=strlen($s1); $j < $k; $j++) {
+			for ($j=0,$k=strlen((string)$s1); $j < $k; $j++) {
 				if ($s1[$j] != $s2[$j]) {
-					print substr($s1,$j).' ';
+					print substr((string)$s1,$j).' ';
 					break;
 				}
 			}
 			print "<b>Error date(): $ts<br><pre> 
-&nbsp; \"$s1\" (date len=".strlen($s1).")
-&nbsp; \"$s2\" (adodb_date len=".strlen($s2).")</b></pre><br>";
+&nbsp; \"$s1\" (date len=".strlen((string)$s1).")
+&nbsp; \"$s2\" (adodb_date len=".strlen((string)$s2).")</b></pre><br>";
 			$fail = true;
 		}
 		
@@ -655,7 +655,7 @@ function adodb_date($fmt,$d=false,$is_gmt=false)
 	$min = $arr['minutes'];
 	$secs = $arr['seconds'];
 	
-	$max = strlen($fmt);
+	$max = strlen((string)$fmt);
 	$dates = '';
 	
 	/*
@@ -682,7 +682,7 @@ function adodb_date($fmt,$d=false,$is_gmt=false)
 			$dates .= sprintf(' %s%04d',($gmt<0)?'+':'-',abs($gmt)/36); break;
 				
 		case 'Y': $dates .= $year; break;
-		case 'y': $dates .= substr($year,strlen($year)-2,2); break;
+		case 'y': $dates .= substr((string)$year,strlen((string)$year)-2,2); break;
 		// MONTH
 		case 'm': if ($month<10) $dates .= '0'.$month; else $dates .= $month; break;
 		case 'n': $dates .= $month; break;

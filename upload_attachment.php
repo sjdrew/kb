@@ -2,6 +2,11 @@
 	include_once("config.php");
 	include_once("lib/subs_image.php");	
 	set_time_limit(180);
+    	
+    $ID = GetVar("ID");
+	$Type = GetVar("Type");
+	$AttID = GetVar("AttID");
+	$AsContent = GetVar("AsContent");
 ?>
 <html>	
 <head>
@@ -16,27 +21,22 @@
 
 ini_set("upload_max_filesize",$AppDB->Settings->MaxUploadSize . "M");
 
-function upload_file()
+function upload_file($ID,$Type,$AttID,$AsContent)
 {
-	global $MAX_FILE_SIZE; 
-	global $HTTP_POST_FILES;
 	global $AppDB;
-	
-	$ID = GetVar("ID");
-	$Type = GetVar("Type");
-	$AttID = GetVar("AttID");
-	$AsContent = GetVar("AsContent");
+	   
+
 	
 	if ($Type == "" || $ID == "") {
 		echo "Internal Error, Type or ID not specified";
 		exit;
 	}
-	if ($MAX_FILE_SIZE && $ID) {	
-		if (is_uploaded_file($HTTP_POST_FILES['attachmentfile']['tmp_name'])) {
+	if (!empty($_FILES) && $ID) {	
+		if (is_uploaded_file($_FILES['attachmentfile']['tmp_name'])) {
 			clearstatcache();
-			$orig_name = $HTTP_POST_FILES['attachmentfile']['name'];
+			$orig_name = $_FILES['attachmentfile']['name'];
 			$basename = basename($orig_name);			
-			$filename = $HTTP_POST_FILES['attachmentfile']['tmp_name'];
+			$filename = $_FILES['attachmentfile']['tmp_name'];
 			$fd = @fopen($filename, "rb");
 			if ($fd) {
 				$filesize = @filesize($filename);
@@ -52,7 +52,7 @@ function upload_file()
 					$p = strrchr($basename,'.');
 					if ($p) $ext = $p; else $ext = ".txt";				
 					$Fields = array();
-					$Fields["$Type".ID] = $ID;
+					$Fields["$Type".'ID'] = $ID;
 					$Fields["Size"] = $filesize;
 					$Fields["DocType"] =  $ext;
 					$Fields["Filename"] = $basename;
@@ -76,14 +76,14 @@ function upload_file()
 						if ($AppDB->UpdateBlob("$Type" . "Attachments","Attachment",$contents,"ID=$AttID"))
 	  		    			$msg = "$orig_name was successfully attached to this $Type.";
 						else
-							$msg = "Unable to insert attachment:<br>" . $AppDB->Errorno(). ": ". $AppDB->ErrorMsg() . "<br>";
+							$msg = "Unable to insert attachment:<br>" . $AppDB->ErrorMsg . "<br>";
 
 					}
 					
 					if ($Type == "Article") {
 						global $CUser;
-						$AFields[ArticleID] = $ID;
-						$AFields[Trail] = "Attachment " . $basename . " added by " . $CUser->u->FirstName . " " . $CUser->u->LastName;
+						$AFields['ArticleID'] = $ID;
+						$AFields['Trail'] = "Attachment " . $basename . " added by " . $CUser->u->FirstName . " " . $CUser->u->LastName;
 						AuditTrail(($AsContent) ? "AddAttachmentContent" : "AddAttachment", $AFields);
 						// Notify Must be called before LastModified is updated.
 						SendNotifications($ID,"NotifyUpdated");
@@ -103,12 +103,12 @@ function upload_file()
 	}
 	return $msg;
 }
-if ($MAX_FILE_SIZE) { // uploading
+if (!empty($_FILES)) { // uploading
 	BusyImage(1,"Please wait...");
 }
 ?>
 
-<form enctype="multipart/form-data" action="<?  echo $PHP_SELF ?>" method="post">
+<form enctype="multipart/form-data" action="<?  echo $_SERVER['PHP_SELF'] ?>" method="post">
 <?
 	hidden("ID",GetVar("ID"));
 	hidden("Type",$Type);
@@ -129,12 +129,12 @@ if ($MAX_FILE_SIZE) { // uploading
 	   <td class="DialogBody" height="80%" valign="top">
 	   <br>
         <table width="100%">
-		<?  if ($MAX_FILE_SIZE) {  ?>
+		<?  if (!empty($_FILES)) {  ?>
             <tr>
             	<td class="form-data" align="right" colspan="2" height="140">
                 <p align="center" ><b>
                   <?  
-					$msg = upload_file();
+					$msg = upload_file($ID,$Type,$AttID,$AsContent);
 					BusyImage(0);
 					echo $msg;
 				 ?><br><br><input type="button" onClick="window.opener.document.forms[0].submit(); window.close()" value="Close" name="Close"></b></td>

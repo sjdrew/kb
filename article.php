@@ -19,13 +19,22 @@
  if ($ID == "") { header("location:home.php"); exit; }
  
 // Initialize
-	list($ID,$Version) = explode('.',$ID,2);
-	if (substr($ID,0,2) == "KB") $ID = (int)substr($ID,2);
+    $AttID = GetVar('AttID');
+    $Ext = GetVar('Ext');
+    $Frame = GetVar('Frame');
+    $frm = GetVar('frm');
+    $nohdr = GetVar('nohdr');
+    $Mode = GetVar('Mode');
+    $ShowTop = GetVar('ShowTop');
+
+    
+	@list($ID,$Version) = explode('.',$ID,2);
+	if (substr((string)$ID,0,2) == "KB") $ID = (int)substr((string)$ID,2);
 	$ID = (int)$ID;
 	$IDstr = sprintf("KB%06d",$ID);
 	$IDBase = $ID;
 	$Archive = 0;
-	$Version = substr($Version,0,4);
+	$Version = substr((string)$Version,0,4);
 	$Vercheck = (int)$Version;
 	if ($Vercheck > 0) {
 		$ID = "$ID.$Version";
@@ -49,14 +58,14 @@
 <link REL="stylesheet" HREF="styles.css">
 </link>
 </head>
-<?
+<?    
 	// If No content, but have attachments then act as frameset
 	if (!$Frame) {
 		$AttR = $AppDB->GetRecordFromQuery("select ID,Filename from $AttTable" . "Attachments where $AttIDColumn='$ID' and AsContent=1");
 		if ($AttR) {
 			$Frame = 1;
 			$AttachmentID=$AttR->ID;
-			$AttachmentExt=strtolower(substr($AttR->Filename,-3));
+			$AttachmentExt=strtolower(substr((string)$AttR->Filename,-3));
 		}
 	}
 
@@ -89,7 +98,7 @@
 	}
 </script>
 <frameset rows="'.$topspace.',*" frameborder="NO" border="0" framespacing="0">
-  <frame src="'. $PHP_SELF . "?Frame=1&ID=$ID&nohdr=$nohdr" . "&frm=t" .'" name="topFrame" scrolling="No"  noresize >
+  <frame src="'. $_SERVER['PHP_SELF'] . "?Frame=1&ID=$ID&nohdr=$nohdr" . "&frm=t" .'" name="topFrame" scrolling="No"  noresize >
   <frameset cols="*,200" frameborder="NO" border="0" framespacing="0">
 ';
     //ensure that articles with attachment as content do not reveal the content unless user is authorized to see it
@@ -98,7 +107,7 @@
 	if(!$R) exit;
 	echo '
 	  <frame src="'. $urlbot .'" name="leftFrame" >
-	  <frame src="'. $PHP_SELF . "?Frame=1&ID=$ID&AttID=$AttachmentID&Ext=$AttachmentExt&nohdr=$nohdr" . "&frm=r" .'"name="rightFrame" scrolling="No"  noresize >
+	  <frame src="'. $_SERVER['PHP_SELF'] . "?Frame=1&ID=$ID&AttID=$AttachmentID&Ext=$AttachmentExt&nohdr=$nohdr" . "&frm=r" .'"name="rightFrame" scrolling="No"  noresize >
   </frameset>
 </frameset>';
 		exit;
@@ -143,7 +152,7 @@
 
 			// Dont log hit if Admin and DontLogAdmin is set, except always log if MustRead is Yes
 	   		if (!$Archive &&  (!$CUser->IsPriv(PRIV_ADMIN) || !$AppDB->Settings->DontLogAdmin || $R->MustRead == "Yes") ) {	
-				$HFields[ArticleID] = $ID;
+				$HFields['ArticleID'] = $ID;
 				
 				// If we just read it in past 30 minutes then
 				// just update the hit record, rather than add a new one.
@@ -153,7 +162,7 @@
 					"DATEDIFF(minute,CREATED,getdate()) < 30 order by CREATED desc");
 
 				if ($MyLastHit) {
-					$HFields[CREATED] = "GetDate()";
+					$HFields['CREATED'] = "GetDate()";
 					$AppDB->update_record($MyLastHit->ID,'Hits',$HFields,DB_NOAUDIT_UPDATE);
 				}
 				else {
@@ -200,6 +209,7 @@
  		AuditTrail("ArticleRead",array('ID' => (int)$ID));
 
 		if ($AttID) $DivScroll = "height: 150px; overflow:auto;";
+        else $DivScroll = '';
   		// If AttID is set, then we are displaying Content attachment in frame "AsContent"
   ?>
   <div id="ArticleAttachments" style="padding-bottom:6px; <? echo $DivScroll; ?>">
@@ -223,6 +233,7 @@
         <td align="right"> Version:</td>
         <td nowrap><? 
 		$V = $Version;
+        $NextArchivedID = '';
 		if ($V == "") {
 			echo "Active "; 
 			$pID = $ID + 0.9999;
@@ -232,11 +243,13 @@
 			echo "<font color=red>$iV</font> ";
 			$pID = $ID;
 			$Tmp = $AppDB->GetRecordFromQuery("select top 1 ID from ArchiveArticles where ID > $ID and ID < ($IDBase + 1) order by ID");
-			$NextArchivedID = $Tmp->ID;
+			if ($Tmp) $NextArchivedID = $Tmp->ID;
 		}
+        $PrevArchivedID = null;
 		$Tmp = $AppDB->GetRecordFromQuery("select top 1 ID from ArchiveArticles where ID < $pID and ID > $IDBase order by ID desc");
-		$PrevArchivedID = $Tmp->ID;
+		if ($Tmp) $PrevArchivedID = $Tmp->ID;
 		
+        $target = '';
 		if ($Frame) $target = "target=_top";
 		if ($nohdr && $Frame) $target = "target=text";
 		
@@ -258,7 +271,7 @@
       </tr>
       <tr>
         <td align="right">Product:</td>
-        <td><? echo "<a target=_top href=\"search.php?Advanced=1&S=Search&Product=" .urlencode($R->Product) . "\" title=\"click to view all Articles for this product\" > " .
+        <td><? echo "<a target=_top href=\"search.php?Advanced=1&S=Search&Product=" .urlencode((string)$R->Product) . "\" title=\"click to view all Articles for this product\" > " .
 		      $R->Product . "</a>"; ?></td>
       </tr>
       <tr>
@@ -313,11 +326,11 @@
 	  
       <tr>
         <td align="right">Created:</td>
-        <td><? echo substr($R->CREATED,0,10); ?> <? echo "by $R->CREATEDBY" ?></td>
+        <td><? echo substr((string)$R->CREATED,0,10); ?> <? echo "by $R->CREATEDBY" ?></td>
       </tr>
       <tr>
         <td align="right">Updated:</td>
-        <td><? echo substr($R->ContentLastModified,0,10) . " by $R->LASTMODIFIEDBY"; ?></td>
+        <td><? echo substr((string)$R->ContentLastModified,0,10) . " by $R->LASTMODIFIEDBY"; ?></td>
       </tr>
       <tr>
         <td align="right">Expires:</td>
@@ -325,12 +338,12 @@
       </tr>
       <tr>
         <td align="right">Reviewed:</td>
-        <td><? echo substr($R->LastReviewed,0,10); ?>
+        <td><? echo substr((string)$R->LastReviewed,0,10); ?>
         <? if ($R->LastReviewed) echo "by $R->LastReviewedBy" ?></td>
       </tr>
       <tr>
         <td align="right" nowrap>Review By:</td>
-        <td><? echo substr($R->ReviewBy,0,10); ?></td>
+        <td><? echo substr((string)$R->ReviewBy,0,10); ?></td>
       </tr>
       <tr>
         <td align="right">Contact:</td>

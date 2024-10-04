@@ -1,4 +1,4 @@
-<script language="php">
+<?php
 /**
  * Generic Routines
  * 
@@ -71,7 +71,7 @@ function get_url_contents($url,$proxy_name = "", $proxy_port = "")
 	   	fputs($fp, "GET $url HTTP/1.0\r\nHost: $proxy_name\r\n\r\n");
    		while(!feof($fp)) { $cont .= fread($fp,4096); }
 	   	fclose($fp);
-   		$cont = substr($cont, strpos($cont,"\r\n\r\n")+4);
+   		$cont = substr((string)$cont, strpos($cont,"\r\n\r\n")+4);
 	}
 	return $cont;
 } 
@@ -113,8 +113,8 @@ function get_backtrace($printOrArr=true,$levels=9999)
 					else if (is_bool($v)) $args[] = $v ? 'true' : 'false';
 					else {
 						$v = (string) @$v;
-						$str = htmlspecialchars(substr($v,0,$MAXSTRLEN));
-						if (strlen($v) > $MAXSTRLEN) $str .= '...';
+						$str = htmlspecialchars((string)substr((string)$v,0,$MAXSTRLEN));
+						if (strlen((string)$v) > $MAXSTRLEN) $str .= '...';
 						$args[] = $str;
 					}
 				}
@@ -135,14 +135,14 @@ function get_backtrace($printOrArr=true,$levels=9999)
 function htmltotext($html,$force=0)
 {
 	if (($p = strpos($html,'<')) === false) return $html;
-	$html = substr($html,$p);
+	$html = substr((string)$html,$p);
 //	if (!$force && !strpos($html,"<")===false) 
 //		return $html;
 	$text = html_entity_decode($html . ">");
 	$pattern="'<[\/\!]*?[^<>]*?>'si";
 	$replace="";
 	$text = preg_replace ($pattern, $replace, $text);
-	return rtrim($text,">");
+	return rtrim((string)$text,">");
 }
 
 //
@@ -190,7 +190,7 @@ function thisURL()
 //
 function RecordToGlobals($F)
 {
-	while(list ($key, $val) = each ($F))  {
+    foreach($F as $key => $val) {
 		$GLOBALS[$key] = $val;				
 	}
 }
@@ -211,17 +211,10 @@ function GetVar($name,$PostOnly=0,$Default=NULL)
 //
 function repost_stripslashes()
 {
-	$gpc = get_magic_quotes_gpc();
 	
 	if ($_POST) {
-		while(list($key, $val) = each ($_POST)) {
-			if ($gpc) {
-				$GLOBALS[$key] = stripslashes($_POST[$key]);
-			}
-			else {
-				$GLOBALS[$key] = $_POST[$key];			
-			}
-			//eval("\$GLOBALS[" . "\$key] = \"$val\";");
+		foreach($_POST as $key => $val) {
+			$GLOBALS[$key] = $val;		
 		}
 	}
 }
@@ -247,7 +240,7 @@ function dropdownlist($name,$texts,$values,$cur,$param="",$blank=0)
 	echo "<SELECT $size NAME=\"$name\" $param >\n";
 	
 	$found = "";
-	
+	$useindex = null;
   	for($i = 0; $i < count($texts); ++$i) {
   		$sel = "";
   		if ($useindex) {
@@ -261,13 +254,13 @@ function dropdownlist($name,$texts,$values,$cur,$param="",$blank=0)
   			}
   		}
 		$v = ($useindex == true) ? $i : $values[$i];					
-   		echo "<option $sel value=\"" . htmlspecialchars($v) . "\">" . htmlspecialchars($texts[$i]) . "</option>\n";
+   		echo "<option $sel value=\"" . htmlspecialchars((string)(string)$v) . "\">" . htmlspecialchars((string)(string)$texts[$i]) . "</option>\n";
 	}
 	//
 	// If current is not found in list, add it as a valid choice
 	//
-	if (trim($cur) != "" && $found == "") {
-		$cur = htmlspecialchars($cur);
+	if (trim((string)$cur) != "" && $found == "") {
+		$cur = htmlspecialchars((string)$cur);
    		echo "<option selected value=\"$cur\">$cur</option>\n";
 	}
 	echo "</select>";
@@ -318,7 +311,7 @@ function hidden($name, $value)
 {
 	global $printview;
 	if ($printview) return;
-	echo "<input type=\"hidden\" name=\"$name\" value=\"" . htmlentities($value) . "\">\n";
+	echo "<input type=\"hidden\" name=\"$name\" value=\"" . htmlentities((string)$value) . "\">\n";
 }
 
 function htmlstr($string)
@@ -410,7 +403,7 @@ function file_ext($f)
 	$ext = "";
 	$dpos = strrpos($f,".");
 	if ($dpos) {
-		$ext = substr($f,$dpos+1);
+		$ext = substr((string)$f,$dpos+1);
 	}
 	return $ext;
 }
@@ -434,7 +427,7 @@ function ShowTabs($TabsList,$ActiveTab,$ClassPrefix="")
 		return;
 	}
 	global $_Tab;	
-	if ($_Tab != "") $ActiveTab = substr($_Tab,3); // reposted _Tab overrides ActiveTab
+	if ($_Tab != "") $ActiveTab = substr((string)$_Tab,3); // reposted _Tab overrides ActiveTab
 	if ($ActiveTab == "") $ActiveTab = $TabsList[0];
 	hidden("_Tab", "Tab" . $ActiveTab);
 		
@@ -476,12 +469,12 @@ function ShowTabs3($TabsList,$ActiveTab,$ClassPrefix="",$bottom_spacer=5,$width=
 	}
 	$_Tab = GetVar($TabGroupStr);
 	
-	if ($_Tab != "") $ActiveTab = substr($_Tab,3); // reposted _Tab overrides ActiveTab
+	if ($_Tab != "") $ActiveTab = substr((string)$_Tab,3); // reposted _Tab overrides ActiveTab
 	if ($ActiveTab == "") $ActiveTab = $TabsList[0];
 	hidden("$TabGroupStr", "Tab" . $ActiveTab);
 		
 	echo '
-	     <table width="' . $width . '" cellspacing="0" cellpadding="2" border=0>
+	     <table style="width:' . $width . '" cellspacing="0" cellpadding="2" border=0>
 		 <tr>';
 	$tabonclass = $ClassPrefix . "tabon";
 	$taboffclass = $ClassPrefix . "taboff";
@@ -541,9 +534,9 @@ function ShowMsgBox($msg,$align="left")
 	if ($msg) {
 		echo '<table width="100%" border="0"><tr><td width="70%" align="' . $align . '">
 		      <div class="MsgBox"><ul style="padding-top:0; padding-bottom:0; margin-top:0; margin-bottom:0;" >';
-		$lines = split('<br>',$msg);
+		$lines = explode('<br>',$msg);
 		foreach($lines as $line) {
-			$line = trim($line);
+			$line = trim((string)$line);
 			if ($line)	echo "<li>$line</li>\n";
 		}
 		echo '</ul></div>
@@ -574,7 +567,7 @@ function ParseFields($Table,&$msg)
 	$RList = $AppDB->MakeArrayFromQuery("select ID,ColumnName as ITEM from FieldDetails where TableName='$Table' AND Required='Yes'");
 
 	foreach($RList as $FID => $FName) {
-		if (trim($_POST[$FName]) == "") {
+		if (trim((string)$_POST[$FName]) == "") {
 			$msg .= "'$FName' cannot be blank.<br>";
 			++$Errors;
 		}
@@ -631,6 +624,7 @@ function DBField($TableName,$FieldName,$Value,$rdonly = 0,$Blank = "", $QueryArg
 		return;
 	}
 	
+    $Dis = '';
 	if ($rdonly == 2) {
 		$Dis = " disabled ";
 	}
@@ -639,10 +633,10 @@ function DBField($TableName,$FieldName,$Value,$rdonly = 0,$Blank = "", $QueryArg
 		case "Text":
 			$type = "text";
 			if ($HTMLFieldName == "Password") $type = "password";
-			echo "<input $Dis type=\"$type\" $pw value=\"" . htmlspecialchars($Value) . "\" name=\"$HTMLFieldName\" title=\"$F->HelpText\" size=\"$F->HTMLSize\" maxlength=\"$F->MaxLength\" class=\"$F->Style\" $F->TagParams>\n";
+			echo "<input $Dis type=\"$type\"  value=\"" . htmlspecialchars((string)$Value) . "\" name=\"$HTMLFieldName\" title=\"$F->HelpText\" size=\"$F->HTMLSize\" maxlength=\"$F->MaxLength\" class=\"$F->Style\" $F->TagParams>\n";
 			break;
 		case "TextArea":
-			echo "<textarea $Dis id=\"$HTMLFieldName\" name=\"$HTMLFieldName\" title=\"$F->HelpText\" cols=\"$F->HTMLSize\" rows=\"$F->MaxLength\" class=\"$F->Style\" $F->TagParams>" . htmlspecialchars($Value) . "</textarea>\n";
+			echo "<textarea $Dis id=\"$HTMLFieldName\" name=\"$HTMLFieldName\" title=\"$F->HelpText\" cols=\"$F->HTMLSize\" rows=\"$F->MaxLength\" class=\"$F->Style\" $F->TagParams>" . htmlspecialchars((string)$Value) . "</textarea>\n";
 			break;
 		case "DropList":
 			if ($F->Query) {
@@ -650,7 +644,7 @@ function DBField($TableName,$FieldName,$Value,$rdonly = 0,$Blank = "", $QueryArg
 				//eval("\$Q = \"$F->Query\";");
 				//$p = strstr($F->Query,'$');
 				//if ($p) {
-				//	$varname = substr($p,1,
+				//	$varname = substr((string)$p,1,
 				
 				$Q = $F->Query . $QueryArg;
 				dropdownlistfromquery($HTMLFieldName,$AppDB,$Q,$Value,$Blank,$F->TagParams . $Dis,$F->QFieldText,$F->QFieldValue);
@@ -659,7 +653,7 @@ function DBField($TableName,$FieldName,$Value,$rdonly = 0,$Blank = "", $QueryArg
 				$vlist = explode(",",$F->FieldValues);
 				$values = $texts = array();
 				foreach($vlist as $v) {
-					list($text, $value) = explode(";",$v,2);
+					@list($text, $value) = explode(";",$v,2);
 					if ($value == "") $value = $text;
 					$values[] = $value;
 					$texts[] = $text;
@@ -675,7 +669,10 @@ function DBField($TableName,$FieldName,$Value,$rdonly = 0,$Blank = "", $QueryArg
 			$checked = ($F->FieldValues == $Value) ? "checked" : "";
 			echo "<input $Dis type=\"radio\" $checked value=\"$F->FieldValues\" name=\"$F->RadioGroup\" title=\"$F->HelpText\" class=\"$F->Style\" $F->TagParams>\n";
 			break;
-		case "Date":
+        case "Date":
+			echo "<input $Dis type=\"$F->Type\"  value=\"" . htmlspecialchars((string)$Value) . "\" name=\"$HTMLFieldName\" title=\"$F->HelpText\" class=\"$F->Style\" $F->TagParams>\n";
+            break;
+		case "old_Date":
 			// note: switched to using FieldName for date controls as otherwise cannot have two from
 			// same field on same page. (ie start/end)
 			CalHeader($FieldName, !$rdonly, 0, 0, 0,($F->HTMLSize > 14),0,1);
@@ -688,11 +685,10 @@ function DBField($TableName,$FieldName,$Value,$rdonly = 0,$Blank = "", $QueryArg
 
 function HelpFileName()
 {
-	global $PHP_SELF;
     clearstatcache();
 	
-	$filename = basename($PHP_SELF);
-	list($file,$ext) = split("\.",$filename);
+	$filename = basename($_SERVER['PHP_SELF']);
+	@list($file,$ext) = explode("\.",$filename);
 
 	$hlpfile = "help/$file" . ".html";
 	return $hlpfile;
@@ -753,8 +749,8 @@ function graph_file($type,$cache=0)
 		}  
 		closedir($dir);
 	}
-	$u = split("@",getusername());
-	$fname = sprintf("$base/%s_%s_%s.png",$u[0],$type,substr($secs,6,4));
+	$u = explode("@",getusername());
+	$fname = sprintf("$base/%s_%s_%s.png",$u[0],$type,substr((string)$secs,6,4));
 	return $fname;
 }
 
@@ -790,7 +786,7 @@ function DisplayAttachments($Type,$ID,$AllowRW,$NonPics = 0, $AddButton = 0, $Q 
 			DisplayAttachmentsAddButton($Type,$ID,$AllowRW);
 		else { // 2
 		    if ($ID) $CA = $AppDB->GetRecordFromQuery("select * from "  . $Type . "Attachments where " . $Type . "ID=$ID $Q");		
-			DisplayAttachmentsAddContentButton($Type,$ID,$AllowRW,$CA->ID);		
+			DisplayAttachmentsAddContentButton($Type,$ID,$AllowRW,isset($CA->ID) ? $CA->ID : '');		
 		}
 	}
 	if (!$ID) return;
@@ -821,7 +817,7 @@ function DisplayAttachments($Type,$ID,$AllowRW,$NonPics = 0, $AddButton = 0, $Q 
 function GetAttachmentIcon($Filename)
 {
 				
-	$ext = substr($Filename,strrpos($Filename,".")+1,3);
+	$ext = substr((string)$Filename,strrpos($Filename,".")+1,3);
 	if ($ext == "") $extimage = "txt.gif";
 	else {
 		if (!stristr("jpg,gif,doc,pdf,txt,xls,rtf,zip",$ext)) $ext = "txt";				
@@ -830,48 +826,11 @@ function GetAttachmentIcon($Filename)
 	return '<img style="margin-right:1px" align="absmiddle" height=16 width=16 border=0 src="images/' .$extimage .'">';
 }
 
-function DisplayPictureAttachments(&$db,$Type,$ID,$RW,$PicCols=3)
-{
-	global $AppDB;
-	
-	if (!$ID) return;
-    $result = sql($AppDB,"select * from "  . $Type . "Attachments where " . $Type . "ID=$ID order by CREATED");
-	if ($result) {
-		$first = 1;
-        while($AR = $AppDB->sql_fetch_obj($result)) {  
-			if (isPicture($AR->Filename)) {      
-				if ($first) { 
-				    echo('<center><table border=1 width="90%" border=0">'); $first = 0; 
-				}
-				if ($n % $PicCols == 0) {
-					if ($n  > 0) echo('</tr>');
-					echo("<tr>\n");
-				}
-				echo('<td align="center">'); 
- 	            echo "<a target=_blank title=\"$AR->Filename, " . number_format($AR->Size) . " Bytes. Uploaded on " . DateTimeStr($AR->CREATED) .  " by  $AR->Name \"" . ' href="show_attachment.php?Type='. $Type . '&ID=' . $AR->ID . '"><img src="preview_pic.php?Type='.$Type.'&ID=' . $AR->ID . '" border=0>';
-				echo '<br>';
-                if ($RW)
-					echo '<a title="Remove attachment" href="Javascript:delete_attachment(' . $AR->ID  .');"><img border="0" src="images/delete.gif" width="11" height="11"></a>' . "\n";								
-				echo "<font size=1>$AR->Filename</font></a>";
-				echo('</td>');
-				++$n;
-			} 
-		}
-		if ($n > 0) {
-			while($n > $PicCols && $n % $PicCols) {
-				echo ("<td>&nbsp;</td>");
-				++$n;
-			}
-			echo('</tr></table></center>');
-		} 
-    } 
-}
-
 function ShowNotesBut($ID,$Table,$KeyField)
 {
 	global $printview;
 	if ($printview) return;
-	
+	$disabled = '';
 	if ($ID == "") { $disabled = "disabled"; $ID = 0; }
    	echo '<input type="Button" ' . $disabled . ' onclick="javascript:EditNote(' . "$ID,0,'$Table','$KeyField'" . '); void(0);" NAME="NewNoteBut" VALUE="Add Notes">';
 }
@@ -887,14 +846,13 @@ function ShowNotes($Table,$ID,$KeyField,$printview,$StylePrefix="")
 	global $AppDB;
 	global $CUser;
 	
-	if ($_POST["DeleteNoteID"] > 0) {
-		if (IsPrivOrCreator(PRIV_ADMIN,"$Table",$_POST["DeleteNoteID"])) {
-			$AppDB->sql("delete from $Table where ID=" . $_POST["DeleteNoteID"]);
-			AuditTrail("DeleteNote",array(ID => $ID));
+	if (GetVar("DeleteNoteID") > 0) {
+		if (IsPrivOrCreator(PRIV_ADMIN,"$Table",GetVar("DeleteNoteID"))) {
+			$AppDB->sql("delete from $Table where ID=" . GetVar("DeleteNoteID"));
+			AuditTrail("DeleteNote",array('ID' => $ID));
 		}
 	}
 	
-	if ($NID == "") $NID = 0;
 	if ($ID == "") $disabled = "disabled";
 
 	$first = 1;
@@ -935,4 +893,3 @@ function ShowNotes($Table,$ID,$KeyField,$printview,$StylePrefix="")
 	if (!$first) echo '</table></div>';
 	else echo "</div><br>";
 }
-</script>

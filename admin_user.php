@@ -6,12 +6,12 @@
 	
 	if ($ID && $_POST) {
 		// checkboxes do not post if not set
-		if ($_POST[BulletinEmail] == "") $_POST[BulletinEmail] = "";
-		if ($_POST[NotifyNew] == "") $_POST[NotifyNew] = "";
-		if ($_POST[NotifyUpdated] == "") $_POST[NotifyUpdated] = "";
-		if ($_POST[NotifySubmitted] == "") $_POST[NotifySubmitted] = "";
-		if ($_POST[NotifyTechnicalReview] == "") $_POST[NotifyTechnicalReview] = "";
-		if ($_POST[NotifyContentReview] == "") $_POST[NotifyContentReview] = "";
+		if ($_POST['BulletinEmail'] == "") $_POST['BulletinEmail'] = "";
+		if ($_POST['NotifyNew'] == "") $_POST['NotifyNew'] = "";
+		if ($_POST['NotifyUpdated'] == "") $_POST['NotifyUpdated'] = "";
+		if ($_POST['NotifySubmitted'] == "") $_POST['NotifySubmitted'] = "";
+		if ($_POST['NotifyTechnicalReview'] == "") $_POST['NotifyTechnicalReview'] = "";
+		if ($_POST['NotifyContentReview'] == "") $_POST['NotifyContentReview'] = "";
 	}
 
 function ProcessSave($ID,$rdonly,&$msg,&$Err,$Multi=0)
@@ -27,7 +27,7 @@ function ProcessSave($ID,$rdonly,&$msg,&$Err,$Multi=0)
 		if (!$Multi) $msg = "Changes were saved.";
 	}
 	else {
-		$CHK = $AppDB->GetRecordFromQuery("Select ID from $Table where Username = '". $_POST[Username]. "'");
+		$CHK = $AppDB->GetRecordFromQuery("Select ID from $Table where Username = '". $_POST['Username']. "'");
 		if ($CHK) { 
 			$msg = "A User by that User ID already exists";
 			return "";
@@ -42,7 +42,7 @@ function ProcessDelete($ID)
 {
 	global $AppDB;
 	
-	if ($_POST[Delete] && $ID) {
+	if ($_POST['Delete'] && $ID) {
 		// Delete 
 		$AppDB->sql("delete from users where ID = $ID");
 		header("location:admin.php?msg=User record deleted.");
@@ -55,20 +55,20 @@ function ProcessDelete($ID)
 	// Handle, Save, Delete, and Reposting
 
 	if ($DelGroup) {
-		$GroupList = GroupStrToArray($_POST[Groups],1);
-		$_POST[Groups] = GroupArrayToStr($GroupList,$DelGroup,"",1);				
+		$GroupList = GroupStrToArray($_POST['Groups'],1);
+		$_POST['Groups'] = GroupArrayToStr($GroupList,$DelGroup,"",1);				
 	}
 	if ($AddGroup) {
-		$GroupList = GroupStrToArray($_POST[Groups],1);
+		$GroupList = GroupStrToArray($_POST['Groups'],1);
 		list($AddID,$Mode,$MustRead) = explode(":",$AddGroup);
 		if ($AddID && $Mode) {
 			if ($AddID == 1) $Mode = "A"; // administrator 
 			if ($AddID == 0) $Mode = "R"; 
-			$_POST[Groups] = GroupArrayToStr($GroupList,$AddID,$Mode . ":$MustRead",0);
+			$_POST['Groups'] = GroupArrayToStr($GroupList,$AddID,$Mode . ":$MustRead",0);
 		}
 	}
 	if ($Save) {
-		$ID = ProcessSave($ID,$rdonly,&$msg,&$Err);		
+		$ID = ProcessSave($ID,$rdonly,$msg,$Err);		
 	}
 		
 	if ($Delete && $ID) {
@@ -127,7 +127,7 @@ function ModGroup(GroupID,Mode,MustRead)
 
 </script>
 <? include("header.php"); ?>
-<form onSubmit="return ParseForm(this);" name=form action="<? echo $PHP_SELF ?>" method="post">
+<form onSubmit="return ParseForm(this);" name=form action="<? echo $_SERVER['PHP_SELF'] ?>" method="post">
 <? hidden("ID",$ID); 
    hidden("DelGroup","");
    hidden("AddGroup","");
